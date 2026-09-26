@@ -114,12 +114,6 @@ static void drawHotAirScreen(bool force) {
 }
 
 void initLcdTemps() {
-    // CS3 / CS4 idle high (unused for now)
-    pinMode(PIN_LCD_CS3, OUTPUT);
-    pinMode(PIN_LCD_CS4, OUTPUT);
-    digitalWrite(PIN_LCD_CS3, HIGH);
-    digitalWrite(PIN_LCD_CS4, HIGH);
-
     // Shared bus init — first panel does full reset sequence
     lcdSolder.initDisplay();
     lcdSolder.backgroundColor(BLACK);
