@@ -9,6 +9,7 @@ void updateAirHandler();
 
 void handleAirEncoder(int delta);
 void handleAirButton();
+void updateAirFanFromPot();
 
 void airSetTemp(uint16_t celsius);
 void airSetFan(uint8_t speed);
