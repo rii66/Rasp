@@ -17,9 +17,11 @@ static int ptcCal = 0;
 void initPTC()
 {
     ptcCal = 0;
+
+#if defined(ARDUINO_ARCH_RP2040)
+    analogReadResolution(12);
+#endif
 }
-
-
 // ====================================================================
 // ADC TO TEMPERATURE
 // ====================================================================
