@@ -68,7 +68,7 @@ void executePageSelect() {
       }
       else if (item == SET_STATION) {
         // Masuk submenu Station
-        stationItem = (activeStation == STATION_HOTAIR)
+        stationItem = (activeStation == STATION_MODE_HOTAIR)
                       ? STATION_HOTAIR
                       : STATION_SOLDER;
         stationMenu = true;
@@ -208,7 +208,7 @@ void handleMenu(int direction, bool pressed) {
       else {
         if (!inMenu) {
           // Dashboard: Solder → Boost, HotAir → Power toggle
-          if (activeStation == STATION_HOTAIR) {
+          if (activeStation == STATION_MODE_HOTAIR) {
             airSwitchPower(!airIsOn());
             beepSelect();
           } else {
