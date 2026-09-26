@@ -30,7 +30,7 @@ void txt(int x,int y,const char*s){while(*s){uint8_t c=*s++;if(c>=32&&c<=90){con
 void box(int x,int y,int w,int h,bool active){for(int i=0;i<w;i++){px(x+i,y);px(x+i,y+h-1);}for(int i=0;i<h;i++){px(x,y+i);px(x+w-1,y+i);}if(active){px(x+2,y+2);px(x+3,y+3);}}
 void num(int x,int y,int n){char b[10];snprintf(b,sizeof(b),"%d",n);txt(x,y,b);}
 void flush(){for(uint8_t p=0;p<8;p++){cmd(0xB0+p);cmd(0);cmd(0x10);data(&fb[p*128]);}}
-void init(){const uint8_t a[]={0xAE,0xD5,0x80,0xA8,0x3F,0xD3,0,0x40,0x8D,0x14,0x20,0,0xA1,0xC8,0xDA,0x12,0x81,0x7F,0xD9,0xF1,0xDB,0x40,0xA4,0xA6,0xAF};for(uint8_t c:a)cmd(c);}
+void oledInit(){const uint8_t a[]={0xAE,0xD5,0x80,0xA8,0x3F,0xD3,0,0x40,0x8D,0x14,0x20,0,0xA1,0xC8,0xDA,0x12,0x81,0x7F,0xD9,0xF1,0xDB,0x40,0xA4,0xA6,0xAF};for(uint8_t c:a)cmd(c);}
 void dashboard(){
  txt(2,1,"UART SLAVE");txt(74,1,"ACTIVE");txt(110,1,activeStation==STATION_MODE_SOLDER?"S":"H");
  box(1,15,62,47,activeStation==STATION_MODE_SOLDER);box(65,15,62,47,activeStation==STATION_MODE_HOTAIR);
@@ -47,5 +47,5 @@ void menu(){
  else {txt(2,15,"ITEM");num(38,15,item);txt(2,29,isEditingValue?"EDIT":"SELECT");}
 }
 }
-void initOledUI(){Wire.setSDA(PIN_OLED_SDA);Wire.setSCL(PIN_OLED_SCL);Wire.begin();init();memset(fb,0,sizeof(fb));flush();ready=true;Serial.println(F("[OLED] UI ready"));}
+void initOledUI(){Wire.setSDA(PIN_OLED_SDA);Wire.setSCL(PIN_OLED_SCL);Wire.begin();oledInit();memset(fb,0,sizeof(fb));flush();ready=true;Serial.println(F("[OLED] UI ready"));}
 void updateOledUI(){if(!ready||millis()-lastDraw<250)return;lastDraw=millis();memset(fb,0,sizeof(fb));if(inMenu)menu();else dashboard();flush();}
