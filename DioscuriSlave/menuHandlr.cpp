@@ -344,7 +344,9 @@ void handleMenu(int direction, bool pressed) {
       case PAGE_BOOST:
         if (item == BOOST_TEMP) {
           boostTemp += (direction * 5);
-          boostTemp = constrain(boostTemp, TEMP_MIN, maxTemp);
+        // boostTemp = constrain(boostTemp, TEMP_MIN, maxTemp);  // Old
+        // New (izinkan di atas maxTemp )
+        boostTemp = constrain(boostTemp, TEMP_MIN, TEMP_MAX_CUSTOM);  // 600
         }
         else if (item == BOOST_TIME) {
           boostTimeSec += direction;
