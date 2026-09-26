@@ -85,7 +85,7 @@ unsigned long lastActivity = 0;
 
 // ================= ACTIVE TIP LIMIT =================
 
-int maxTemp = 0;
+int maxTemp = 450;
 
 
 // ================= TEMPERATURE =================
