@@ -71,10 +71,9 @@ void loop() {
         updateStations();   // updatePID + updateAirHandler
     }
 
-    // TIP detect ~2 Hz (satu panggilan)
-    if (now - lastTip >= TIP_MS) {
-        lastTip = now;
-        detectTip();
+    // TIP detect 
+    if (tipError || activeTip == nullptr) {
+    detectTip();
     }
 
     storage.tick();
