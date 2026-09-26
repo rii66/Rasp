@@ -76,7 +76,6 @@ void loop() {
             inMenu = !inMenu;
             inEdit = false;
             isEditingValue = false;
-            stationMenu = false;
             if (inMenu) {
                 page = PAGE_SET;
                 item = 0;
