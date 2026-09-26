@@ -7,6 +7,7 @@ static HotGun hotGun;
 
 void initAirHandler() {
     hotGun.begin();
+    pinMode(PIN_POT_FAN, INPUT);
 
     attachInterrupt(
         digitalPinToInterrupt(PIN_ZERO_CROSS),
@@ -24,19 +25,26 @@ void handleAirEncoder(int delta) {
 
     int temp = hotGun.getTargetTemp();
     temp += delta * 5;
-
-    hotGun.setTemp(temp);
+    temp = constrain(temp, TEMP_MIN_C, TEMP_MAX_C);
+    hotGun.setTemp((uint16_t)temp);
 }
 
 void handleAirButton() {
     hotGun.switchPower(!hotGun.isOn());
 }
 
+void updateAirFanFromPot() {
+    int raw = analogRead(PIN_POT_FAN);
+    int speed = map(raw, 0, 4095, 0, 255);
+
+    if (speed < FAN_MIN_SPEED / 2) speed = 0;
+
+    airSetFan((uint8_t)speed);
+}
+
 void IRAM_ATTR handleAirZeroCross() {
     hotGun.onZeroCross();
 }
-
-/* ================= API untuk WebSocket / UI ================= */
 
 void airSetTemp(uint16_t celsius) {
     hotGun.setTemp(celsius);
