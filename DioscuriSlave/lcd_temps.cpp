@@ -126,7 +126,7 @@ void initLcdTemps() {
     lcdSolder.printString("SOLDER", 28, 60, WHITE, BLACK);
 
     // Second panel: shared RST already pulsed; still run init
-    lcdHotAir.initDisplay();
+    lcdHotAir.initDisplay(false);
     lcdHotAir.backgroundColor(BLACK);
     lcdHotAir.printString("HOT AIR", 24, 60, WHITE, BLACK);
 
