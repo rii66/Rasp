@@ -4,10 +4,9 @@
 #include "GlobalState.h"
 
 void initPWM() {
-#if defined(ARDUINO_ARCH_RP2040)
-    // Per-pin frequency so fan (25 kHz) and heater (20 kHz) do not fight
-    analogWriteRange(PWM_MAX_VAL);
-    analogWriteFrequency(PWM_PIN, (float)PWM_FREQ);
+    #if defined(ARDUINO_ARCH_RP2040)
+      analogWriteRange(PWM_MAX_VAL);
+      analogWriteFreq(PWM_FREQ);   
 #endif
     pinMode(PWM_PIN, OUTPUT);
     analogWrite(PWM_PIN, 0);

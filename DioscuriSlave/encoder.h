@@ -2,6 +2,8 @@
 #define ENCODER_H
 
 #include <Arduino.h>
+
+#include "platform_compat.h"
 #include "config.h"
 
 // ISR

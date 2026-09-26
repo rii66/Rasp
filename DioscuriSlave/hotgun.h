@@ -188,6 +188,7 @@ private:
   uint8_t         fan_speed;
   uint8_t         fixed_power;
   uint32_t        last_update;
+  bool            over_heat = false;
 };
 
 #endif
