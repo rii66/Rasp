@@ -4,134 +4,151 @@
 #include "handler.h"
 #include "Nokia105_LCD.h"
 
-// Shared SPI pins from config.h
-// CS1 solder, CS2 hot-air
-
-static Nokia105 lcdSolder(
-    PIN_LCD_SDA,
-    PIN_LCD_SCK,
-    PIN_LCD_RESET,
-    PIN_LCD_CS1
-);
-
-static Nokia105 lcdHotAir(
-    PIN_LCD_SDA,
-    PIN_LCD_SCK,
-    PIN_LCD_RESET,
-    PIN_LCD_CS2
-);
+// LCD1 = SOLDER, LCD2 = HOT AIR
+static Nokia105 lcdSolder(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS1);
+static Nokia105 lcdHotAir(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS2);
 
 static bool ready = false;
-static unsigned long lastDraw = 0;
-static const unsigned long DRAW_MS = 200;
+static uint32_t lastDraw = 0;
+static const uint32_t DRAW_MS = 200;
 
-static int lastSolderCt = -999;
-static int lastSolderTt = -999;
-static int lastAirCt = -999;
-static int lastAirTt = -999;
-static int lastFan = -999;
+static int lastSolderCt = -999, lastSolderTt = -999, lastSolderPwm = -999;
+static bool lastTipErr = false, lastSleep = false, lastBoost = false;
+
+static int lastAirCt = -999, lastAirTt = -999, lastFan = -999, lastAirPower = -999;
 static bool lastAirOn = false;
-static bool lastTipErr = false;
-static bool lastBoost = false;
+static const char* lastAirMode = nullptr;
 
 static void drawSolderScreen(bool force) {
-    int ct = currentTemp;
-    int tt = targetTemp;
-    bool err = tipError;
-    bool boost = boostMode;
+    const int ct = currentTemp;
+    const int tt = targetTemp;
+    const int pwm = pwmOut;
 
     if (!force &&
-        ct == lastSolderCt && tt == lastSolderTt &&
-        err == lastTipErr && boost == lastBoost) {
+        ct == lastSolderCt && tt == lastSolderTt && pwm == lastSolderPwm &&
+        tipError == lastTipErr && sleeping == lastSleep && boostMode == lastBoost) {
         return;
     }
+
     lastSolderCt = ct;
     lastSolderTt = tt;
-    lastTipErr = err;
-    lastBoost = boost;
+    lastSolderPwm = pwm;
+    lastTipErr = tipError;
+    lastSleep = sleeping;
+    lastBoost = boostMode;
 
     lcdSolder.backgroundColor(BLACK);
 
-    lcdSolder.printString("SOLDER", 28, 8, CYAN, BLACK);
+    // Header
+    lcdSolder.printString("SOLDER", 4, 2, CYAN, BLACK);
+    lcdSolder.lineHorixontal(0, 20, 160, DARKGREY);
 
-    if (err) {
-        lcdSolder.printString("NO TIP", 30, 60, RED, BLACK);
+    // Actual / target
+    lcdSolder.printString("ACT", 4, 27, LIGHTGREY, BLACK);
+    lcdSolder.printDigit(ct < 0 ? 0 : (unsigned)ct, 30, 25, WHITE, BLACK);
+    lcdSolder.printString("C", 88, 25, WHITE, BLACK);
+
+    lcdSolder.printString("SET", 4, 51, LIGHTGREY, BLACK);
+    lcdSolder.printDigit(tt < 0 ? 0 : (unsigned)tt, 30, 49, GREEN, BLACK);
+    lcdSolder.printString("C", 88, 49, GREEN, BLACK);
+
+    // Output/status
+    if (tipError) {
+        lcdSolder.printString("NO TIP", 105, 27, RED, BLACK);
+    } else if (sleeping) {
+        lcdSolder.printString("SLEEP", 105, 27, BLUE, BLACK);
+    } else if (boostMode) {
+        lcdSolder.printString("BOOST", 105, 27, YELLOW, BLACK);
     } else {
-        char buf[16];
-        // Current large
-        snprintf(buf, sizeof(buf), "%d", ct);
-        lcdSolder.printString(buf, 36, 40, WHITE, BLACK);
-        lcdSolder.printString("C", 90, 48, LIGHTGREY, BLACK);
+        lcdSolder.printString(pwm > 0 ? "ON" : "OFF", 105, 27,
+                             pwm > 0 ? GREEN : DARKGREY, BLACK);
+    }
 
-        // Target
-        snprintf(buf, sizeof(buf), "SET %d", tt);
-        lcdSolder.printString(buf, 28, 90, GREEN, BLACK);
+    char buf[16];
+    snprintf(buf, sizeof(buf), "PWM %d%%", (pwm * 100) / 255);
+    lcdSolder.printString(buf, 4, 77, CYAN, BLACK);
 
-        if (boost) {
-            lcdSolder.printString("BOOST", 40, 120, YELLOW, BLACK);
-        } else if (sleeping) {
-            lcdSolder.printString("SLEEP", 40, 120, BLUE, BLACK);
-        } else {
-            snprintf(buf, sizeof(buf), "PWM %d", pwmOut);
-            lcdSolder.printString(buf, 32, 120, DARKGREY, BLACK);
+    lcdSolder.lineHorixontal(4, 101, 152, DARKGREY);
+    lcdSolder.printString("TIP", 4, 105, LIGHTGREY, BLACK);
+
+    if (tipError) {
+        lcdSolder.printString("ERROR", 38, 105, RED, BLACK);
+    } else {
+        switch (currentTipMode) {
+            case 0: lcdSolder.printString("T12", 38, 105, WHITE, BLACK); break;
+            case 1: lcdSolder.printString("C210", 38, 105, WHITE, BLACK); break;
+            default: lcdSolder.printString("CUSTOM", 38, 105, WHITE, BLACK); break;
         }
     }
 }
 
 static void drawHotAirScreen(bool force) {
-    int ct = (int)airGetTemp();
-    int tt = (int)airGetTargetTemp();
-    int fan = (int)airGetFan();
-    bool on = airIsOn();
+    const int ct = (int)airGetTemp();
+    const int tt = (int)airGetTargetTemp();
+    const int fan = (int)airGetFan();
+    const int power = (int)airGetPower();
+    const bool on = airIsOn();
+    const char* mode = airGetModeStr();
 
     if (!force &&
-        ct == lastAirCt && tt == lastAirTt &&
-        fan == lastFan && on == lastAirOn) {
+        ct == lastAirCt && tt == lastAirTt && fan == lastFan &&
+        power == lastAirPower && on == lastAirOn && mode == lastAirMode) {
         return;
     }
+
     lastAirCt = ct;
     lastAirTt = tt;
     lastFan = fan;
+    lastAirPower = power;
     lastAirOn = on;
+    lastAirMode = mode;
 
     lcdHotAir.backgroundColor(BLACK);
 
-    lcdHotAir.printString("HOT AIR", 24, 8, MAGENTA, BLACK);
+    lcdHotAir.printString("HOT AIR", 4, 2, MAGENTA, BLACK);
+    lcdHotAir.lineHorixontal(0, 20, 160, DARKGREY);
+
+    lcdHotAir.printString("ACT", 4, 27, LIGHTGREY, BLACK);
+    lcdHotAir.printDigit(ct < 0 ? 0 : (unsigned)ct, 30, 25, WHITE, BLACK);
+    lcdHotAir.printString("C", 88, 25, WHITE, BLACK);
+
+    lcdHotAir.printString("SET", 4, 51, LIGHTGREY, BLACK);
+    lcdHotAir.printDigit(tt < 0 ? 0 : (unsigned)tt, 30, 49, GREEN, BLACK);
+    lcdHotAir.printString("C", 88, 49, GREEN, BLACK);
+
+    lcdHotAir.printString(mode, 105, 27,
+                          on ? GREEN : DARKGREY, BLACK);
 
     char buf[16];
-    snprintf(buf, sizeof(buf), "%d", ct);
-    lcdHotAir.printString(buf, 36, 40, WHITE, BLACK);
-    lcdHotAir.printString("C", 90, 48, LIGHTGREY, BLACK);
+    snprintf(buf, sizeof(buf), "POWER %d%%", (power * 100) / 255);
+    lcdHotAir.printString(buf, 4, 77, YELLOW, BLACK);
 
-    snprintf(buf, sizeof(buf), "SET %d", tt);
-    lcdHotAir.printString(buf, 28, 90, GREEN, BLACK);
+    snprintf(buf, sizeof(buf), "FAN %d%%", (fan * 100) / 255);
+    lcdHotAir.printString(buf, 4, 93, CYAN, BLACK);
 
-    snprintf(buf, sizeof(buf), "FAN %d", fan);
-    lcdHotAir.printString(buf, 28, 112, CYAN, BLACK);
-
-    lcdHotAir.printString(on ? "ON " : "OFF", 48, 136,
-                          on ? RED : DARKGREY, BLACK);
+    lcdHotAir.lineHorixontal(4, 117, 152, DARKGREY);
+    lcdHotAir.printString(on ? "HEATER ON" : "HEATER OFF", 4, 121,
+                          on ? GREEN : DARKGREY, BLACK);
 }
 
 void initLcdTemps() {
-    // Shared bus init — first panel does full reset sequence
+    // Shared RST: only the first panel performs the hardware reset.
     lcdSolder.initDisplay();
+    lcdSolder.setRotation(1);
     lcdSolder.backgroundColor(BLACK);
-    lcdSolder.printString("SOLDER", 28, 60, WHITE, BLACK);
 
-    // Second panel: shared RST already pulsed; still run init
     lcdHotAir.initDisplay(false);
+    lcdHotAir.setRotation(1);
     lcdHotAir.backgroundColor(BLACK);
-    lcdHotAir.printString("HOT AIR", 24, 60, WHITE, BLACK);
 
     ready = true;
     lastDraw = 0;
-    // force first full paint after delay
     delay(50);
+
     drawSolderScreen(true);
     drawHotAirScreen(true);
 
-    Serial.println(F("[LCD] Nokia105 CS1=Solder CS2=HotAir ready"));
+    Serial.println(F("[LCD] Nokia105 landscape: CS1=Solder CS2=HotAir"));
 }
 
 void updateLcdTemps() {
