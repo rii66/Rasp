@@ -99,12 +99,12 @@ void applyTipProfile(TipConfig *targetTip)
 
     tempOffset = targetTip->tempOffset;
     adcOffset  = targetTip->adcOffset;
+    
+    maxPwmLimit = map(targetTip->maxPWM, 0, 100, 0, PWM_MAX_VAL);
 
-    // maxPWM already in 0..PWM_MAX_VAL scale (T12=255, C210=71, etc.)
-    maxPwmLimit = constrain(targetTip->maxPWM, 0, PWM_MAX_VAL);
+    if (maxTemp > 0 && targetTemp > maxTemp)
+    targetTemp = maxTemp;
 
-    if (targetTemp > maxTemp)
-        targetTemp = maxTemp;
 }
 
 
@@ -135,6 +135,6 @@ void setTipProfile(int mode)
             break;
     }
 
-    if (targetTemp > maxTemp)
+        if (maxTemp > 0 && targetTemp > maxTemp)
         targetTemp = maxTemp;
 }
