@@ -287,16 +287,11 @@ void handleMenu(int direction, bool pressed) {
   //  DASHBOARD (bukan menu)
   // =======================================
   if (!inMenu) {
-    if (activeStation == STATION_HOTAIR) {
-      // Encoder atur suhu Hot Air
-      int t = airGetTargetTemp() + (direction * 5);
-      t = constrain(t, TEMP_MIN, TEMP_MAX_HOTAIR);
-      airSetTemp(t);
-    } else {
-      // Encoder atur suhu Solder
-      targetTemp += (direction * 5);
-      targetTemp = constrain(targetTemp, TEMP_MIN, maxTemp);
-    }
+    // OLED dashboard: encoder hanya memilih station aktif.
+    activeStation = (activeStation == STATION_MODE_SOLDER)
+                    ? STATION_MODE_HOTAIR
+                    : STATION_MODE_SOLDER;
+    beepMove();
     return;
   }
 
@@ -336,8 +331,14 @@ void handleMenu(int direction, bool pressed) {
 
       case PAGE_SET:
         if (item == SET_TEMP) {
-          targetTemp += (direction * 5);
-          targetTemp = constrain(targetTemp, TEMP_MIN, maxTemp);
+          if (activeStation == STATION_MODE_HOTAIR) {
+            int t = airGetTargetTemp() + (direction * 5);
+            t = constrain(t, TEMP_MIN, TEMP_MAX_HOTAIR);
+            airSetTemp((uint16_t)t);
+          } else {
+            targetTemp += (direction * 5);
+            targetTemp = constrain(targetTemp, TEMP_MIN, maxTemp);
+          }
         }
         break;
 
