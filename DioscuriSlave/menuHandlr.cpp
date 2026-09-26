@@ -284,13 +284,12 @@ void handleMenu(int direction, bool pressed) {
   if (direction == 0) return;
 
   // =======================================
-  //  DASHBOARD (bukan menu)
+  // DASHBOARD: EC1 langsung mengatur solder.
   // =======================================
   if (!inMenu) {
-    // OLED dashboard: encoder hanya memilih station aktif.
-    activeStation = (activeStation == STATION_MODE_SOLDER)
-                    ? STATION_MODE_HOTAIR
-                    : STATION_MODE_SOLDER;
+    activeStation = STATION_MODE_SOLDER;
+    targetTemp += (direction * 5);
+    targetTemp = constrain(targetTemp, TEMP_MIN, maxTemp);
     beepMove();
     return;
   }
