@@ -22,6 +22,7 @@
 #include "pages.h"
 #include "uart_link.h"
 #include "lcd_temps.h"
+#include "oled_ui.h"
 #include "platform_compat.h"
 
 static const uint32_t CONTROL_MS = 50;
@@ -48,6 +49,7 @@ void setup() {
     initMotion();
     initUartLink();
     initLcdTemps();
+    initOledUI();
 
     lastActivity = millis();
     lastControl = lastTip = millis();
@@ -78,4 +80,5 @@ void loop() {
 
     storage.tick();
     updateLcdTemps();
+    updateOledUI();
 }
