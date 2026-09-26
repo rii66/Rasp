@@ -1,86 +1,94 @@
 #include "platform_compat.h"
 #include "config.h"
 #include "encoder.h"
-#include "pages.h"
-#include "GlobalState.h"
-#include "boost.h"
-#include "pid.h"
 
-volatile int encoderPos = DEFAULT_TEMP; 
-volatile bool encoderMoved = false;
-
+volatile int encoderPos = 0;
+volatile int encoder2Pos = 0;
 volatile uint8_t lastState = 0;
-// lastEncInterrupt sudah tidak dipakai lagi, jadi bisa dihapus.
+volatile uint8_t lastState2 = 0;
 
-/* ===== ISR ===== */
 void IRAM_ATTR encoderISR() {
-  // HAPUS logika micros() dan debounce di sini.
-  
   uint8_t a = digitalRead(ENC_A);
   uint8_t b = digitalRead(ENC_B);
-
   uint8_t encoded = (a << 1) | b;
   uint8_t sum = (lastState << 2) | encoded;
 
-  bool moved = false;
-
-  // Logika pembacaan pola putar kanan
-  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
+  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011)
     encoderPos++;
-    moved = true;
-  }
-
-  // Logika pembacaan pola putar kiri
-  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
+  else if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000)
     encoderPos--;
-    moved = true;
-  }
 
-  if (moved) encoderMoved = true;
-
-  // Wajib selalu update state meskipun terjadi bouncing
-  lastState = encoded; 
+  lastState = encoded;
 }
 
-/* ===== INIT ===== */
+void IRAM_ATTR encoder2ISR() {
+  uint8_t a = digitalRead(PIN_ENC2_A);
+  uint8_t b = digitalRead(PIN_ENC2_B);
+  uint8_t encoded = (a << 1) | b;
+  uint8_t sum = (lastState2 << 2) | encoded;
+
+  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011)
+    encoder2Pos++;
+  else if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000)
+    encoder2Pos--;
+
+  lastState2 = encoded;
+}
+
 void initEncoder() {
   pinMode(ENC_A, INPUT_PULLUP);
   pinMode(ENC_B, INPUT_PULLUP);
   pinMode(ENC_SW, INPUT_PULLUP);
 
+  pinMode(PIN_ENC2_A, INPUT_PULLUP);
+  pinMode(PIN_ENC2_B, INPUT_PULLUP);
+  pinMode(PIN_ENC2_SW, INPUT_PULLUP);
+
   lastState = (digitalRead(ENC_A) << 1) | digitalRead(ENC_B);
+  lastState2 = (digitalRead(PIN_ENC2_A) << 1) | digitalRead(PIN_ENC2_B);
 
   attachInterrupt(digitalPinToInterrupt(ENC_A), encoderISR, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENC_B), encoderISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(PIN_ENC2_A), encoder2ISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(PIN_ENC2_B), encoder2ISR, CHANGE);
 }
 
-/* ===== BUTTON ===== */
 bool buttonPressed() {
   return !digitalRead(ENC_SW);
 }
 
-/* ===== DELTA (FINAL FIX) ===== */
-int getEncoderDelta() {
-  // Bagi encoderPos dengan 4 supaya 1 klik fisik = 1 langkah logika
-  // (Ubah angka 4 menjadi 2 jika menunya terasa butuh 2x klik baru pindah)
-  int currentLogicPos = encoderPos / 4; 
-  static int lastLogicPos = currentLogicPos;
+bool button2Pressed() {
+  return !digitalRead(PIN_ENC2_SW);
+}
 
+int getEncoderDelta() {
+  static int lastLogicPos = 0;
+  int currentLogicPos = encoderPos / 4;
   int diff = currentLogicPos - lastLogicPos;
 
   if (diff != 0) {
     lastLogicPos = currentLogicPos;
-    return diff; // Akan selalu bernilai 1 atau -1 setiap 1 kali klik fisik
+    return diff;
   }
-
   return 0;
 }
 
-/* Edge-detect click (press → release) */
+int getEncoder2Delta() {
+  static int lastLogicPos2 = 0;
+  int currentLogicPos = encoder2Pos / 4;
+  int diff = currentLogicPos - lastLogicPos2;
+
+  if (diff != 0) {
+    lastLogicPos2 = currentLogicPos;
+    return diff;
+  }
+  return 0;
+}
+
 bool buttonClicked() {
   static bool last = false;
   bool now = buttonPressed();
-  bool click = (last && !now);  // released
+  bool click = last && !now;
   last = now;
   return click;
 }
