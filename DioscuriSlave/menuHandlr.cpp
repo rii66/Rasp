@@ -207,13 +207,9 @@ void handleMenu(int direction, bool pressed) {
       // ===== SHORT PRESS =====
       else {
         if (!inMenu) {
-          // Dashboard: Solder → Boost, HotAir → Power toggle
-          if (activeStation == STATION_MODE_HOTAIR) {
-            airSwitchPower(!airIsOn());
-            beepSelect();
-          } else {
-            startBoost();
-          }
+          // Dashboard: SW1 selalu Boost solder.
+          activeStation = STATION_MODE_SOLDER;
+          startBoost();
         }
         else {
           // ----- Submenu Station -----
