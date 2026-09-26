@@ -1,4 +1,3 @@
-
 /**
  * Dioscuri SLAVE — RP2040
  * Port lean dari Dioscurios V1
@@ -34,7 +33,6 @@ void setup() {
     delay(200);
     Serial.println(F("========== Dioscuri SLAVE RP2040 (V1 port) =========="));
 
-    // Satu-satunya pemilik init EEPROM
     storage.begin();
     storage.loadSettings();
     setTipProfile(currentTipMode);
@@ -42,8 +40,6 @@ void setup() {
     initEncoder();
     pinMode(BUZZER_PIN, OUTPUT);
 
-    // initStations → PWM/PTC + initAirHandler → hotGun.begin()
-    // (hotGun HANYA load setting, tidak storage.begin lagi)
     initStations();
     detectTip();
     initMotion();
@@ -60,22 +56,61 @@ void setup() {
 void loop() {
     const uint32_t now = millis();
 
-    // FAST: input + UART RX
+    // EC1: solder temp / menu. Long hold SW1 opens/closes OLED menu.
     handleMenu(getEncoderDelta(), buttonPressed());
     menuClick = false;
+
+    // EC2: hot-air temperature. SW2 short = heater ON/OFF.
+    static bool lastSw2 = false;
+    static uint32_t sw2Start = 0;
+    const bool sw2 = button2Pressed();
+
+    if (sw2 && !lastSw2) {
+        sw2Start = now;
+    }
+
+    if (!sw2 && lastSw2) {
+        const uint32_t hold = now - sw2Start;
+
+        if (hold >= 2100) {
+            inMenu = !inMenu;
+            inEdit = false;
+            isEditingValue = false;
+            stationMenu = false;
+            if (inMenu) {
+                page = PAGE_SET;
+                item = 0;
+            }
+            beepLong();
+        } else if (hold > 50) {
+            handleAirButton();
+            activeStation = STATION_MODE_HOTAIR;
+        }
+    }
+
+    lastSw2 = sw2;
+
+    // EC2 rotation controls hot-air target outside OLED menu.
+    const int airDelta = getEncoder2Delta();
+    if (airDelta != 0 && !inMenu) {
+        activeStation = STATION_MODE_HOTAIR;
+        handleAirEncoder(airDelta);
+    }
+
+    // Fan speed is controlled ONLY by the physical potentiometer.
+    updateAirFanFromPot();
+
     updateMotion();
     updateUartLink();
 
-    // CONTROL ~20 Hz (satu jalur station)
     if (now - lastControl >= CONTROL_MS) {
         lastControl = now;
         updateBoost();
-        updateStations();   // updatePID + updateAirHandler
+        updateStations();
     }
 
-    // TIP detect 
     if (tipError || activeTip == nullptr) {
-    detectTip();
+        detectTip();
     }
 
     storage.tick();
