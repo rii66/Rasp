@@ -1,0 +1,5 @@
+{
+  "name": "Rasp RP2040",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh && sudo mv bin/arduino-cli /usr/local/bin/arduino-cli && arduino-cli config init --overwrite && arduino-cli core update-index && arduino-cli core install arduino:mbed_rp2040"
+}
