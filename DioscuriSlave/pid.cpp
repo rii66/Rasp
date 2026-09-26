@@ -66,12 +66,14 @@ int adcToTemp(uint16_t rawAdc) {
     return (int)temp;
 }
 
-//====================================================================//
+
 // SAFETY
-//====================================================================//
 void handleSafety() {
-overHeat = (currentTemp > maxTemp);
+
+  int limit = boostMode ? max(maxTemp, boostTemp) : maxTemp;
+  overHeat = (currentTemp > limit + 20);  // +20 margin
 }
+
 
 //====================================================================//
 // READ TEMP
