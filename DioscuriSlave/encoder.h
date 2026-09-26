@@ -2,20 +2,21 @@
 #define ENCODER_H
 
 #include <Arduino.h>
-
 #include "platform_compat.h"
 #include "config.h"
 
-// ISR
 void IRAM_ATTR encoderISR();
+void IRAM_ATTR encoder2ISR();
 void initEncoder();
 
-//FOR WEB ONLY
 extern volatile int encoderPos;
+extern volatile int encoder2Pos;
 
-// OUTPUT
 int getEncoderDelta();
+int getEncoder2Delta();
+
 bool buttonPressed();
+bool button2Pressed();
 bool buttonClicked();
 
 #endif
