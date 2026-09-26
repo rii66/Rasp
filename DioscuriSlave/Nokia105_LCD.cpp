@@ -87,7 +87,7 @@ void Nokia105::displayClear(void) {
   }
 }
 
-void Nokia105::initDisplay(void) {
+void Nokia105::initDisplay(bool doReset) {
   pinMode(SPIDEVICE_CS, OUTPUT);
   pinMode(SPIDEVICE_RES, OUTPUT);
   pinMode(SPIDEVICE_SDA, OUTPUT);
@@ -96,7 +96,7 @@ void Nokia105::initDisplay(void) {
   digitalWrite(SPIDEVICE_CS, HIGH);
   digitalWrite(SPIDEVICE_SCK, LOW);
   digitalWrite(SPIDEVICE_SDA, LOW);
-  reset();
+  if (doReset) reset();
 
   writeNokiaCommand(NOKIA105_SWRESET);
   delay(120);
