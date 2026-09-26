@@ -53,9 +53,6 @@
 
 // ---- PID defaults ----
 #define PID_KP_T12           3.2f
-
-// ---- PID defaults ----
-#define PID_KP_T12           3.2f
 #define PID_KI_T12           0.12f
 #define PID_KD_T12           1.8f
 #define PID_KP_C210          2.8f
