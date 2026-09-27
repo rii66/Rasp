@@ -1,4 +1,7 @@
 voltage regulator 
+100k + adc + 10k gnd
+
+
    VOUT+  ──────────────────────────────────►  Load +
                                                    
                                                    
