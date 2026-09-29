@@ -6,7 +6,7 @@
 #include "motion.h"
 
 #if defined(ARDUINO_ARCH_RP2040)
-  #define LINK Serial1
+  #define LINK Serial2
 #else
   #define LINK Serial
 #endif
