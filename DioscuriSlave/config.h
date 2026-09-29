@@ -98,7 +98,7 @@
 
 #define POWER_PERIOD         100
 #define HEATER_MAX_POWER     100
-#define FAN_PWM_FREQ         25000
+#define FAN_PWM_FREQ         PWM_FREQ
 #define FAN_PWM_RES          8
 #define FAN_MIN_SPEED        60
 #define MAX_PWM_HOTAIR       255
