@@ -29,6 +29,7 @@
 static const uint32_t CONTROL_MS = 50;
 static const uint32_t TIP_MS     = 500;
 static uint32_t lastControl = 0, lastTip = 0;
+static uint32_t lastSerialAlive = 0;
 
 static void bootMark(const __FlashStringHelper* label) {
     Serial.print(F("[BOOT] "));
@@ -42,8 +43,11 @@ void setup() {
     digitalWrite(STATUS_LED, LOW);
 
     Serial.begin(115200);
-    delay(1000);
-    Serial.println(F("\n========== Dioscuri SLAVE RP2040 BOOT TRACE =========="));
+    Serial.ignoreFlowControl(true);
+    delay(100);
+    Serial.println(F("
+========== Dioscuri SLAVE RP2040 BOOT TRACE =========="));
+    Serial.println(F("[BOOT 0] USB CDC serial ready"));
 
     bootMark(F("storage.begin ->"));
     storage.begin();
@@ -73,6 +77,8 @@ void setup() {
 
     lastActivity = millis();
     lastControl = lastTip = millis();
+    lastSerialAlive = millis();
+
     beep();
 
     digitalWrite(STATUS_LED, HIGH);
@@ -81,6 +87,11 @@ void setup() {
 
 void loop() {
     const uint32_t now = millis();
+
+    if (now - lastSerialAlive >= 1000) {
+        lastSerialAlive = now;
+        Serial.println(F("[RUN] slave alive"));
+    }
 
     // EC1: solder temp / menu. Long hold SW1 opens/closes OLED menu.
     handleMenu(getEncoderDelta(), buttonPressed());
