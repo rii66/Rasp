@@ -12,15 +12,11 @@
 #include "motion.h"
 #include "buzzer.h"
 
-// API Hot Air (handler.cpp)
-extern void airSetTemp(uint16_t celsius);
-extern void airSwitchPower(bool on);
-extern uint16_t airGetTargetTemp();
-extern bool airIsOn();
+//  API Hot Air sudah dideklarasikan oleh handler.h.
 
 
-  //====================================//
- //             .MENU HANDLER               //
+//====================================//
+//             .MENU HANDLER               //
 //====================================//
 
 // ===== Cursor tiap halaman =====
