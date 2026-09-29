@@ -306,31 +306,21 @@ while (x < y) {
 }
 }
 
-void Nokia105::  printDigit(unsigned int a,int16_t x, int16_t y,uint16_t forgroundColor,uint16_t backgroundColor) {
-//convet int to string to character the print data but overlapping problem occured when number 4 digit back to 2 digit need some display clear without blink effect   
-/*uint8_t sizeofinput = HEIGHT*WIDTH ; //need to update //255
-char connverter[sizeofinput];
-String str = String(a);  
-str.toCharArray(connverter,sizeofinput);
-*/ //arduino heap memmory got mad at me//https://arduino.stackexchange.com/questions/42986/convert-int-to-char*
-int count = int(log10(a) + 1);
-char cstr[count];
-itoa(a, cstr, 10); //https://cplusplus.com/reference/cstdlib/itoa/
-//---------------------------------------upgrade required-------------------------------------------------------
-printString(cstr,x,y,forgroundColor,backgroundColor);
+void Nokia105::printDigit(unsigned int a, int16_t x, int16_t y, uint16_t forgroundColor, uint16_t backgroundColor) {
+  char cstr[11];
+  snprintf(cstr, sizeof(cstr), "%u", a);
+  printString(cstr, x, y, forgroundColor, backgroundColor);
 
-//padding to avoid overlap text
-if (a < 10) { //1 digit
-  for(int i = 1; i<4; i++) 
-  printString(" ",x+(i*8),y,backgroundColor,backgroundColor);
-} else if ( a >= 10 && a < 100 )  { //2 digit
-  printString(" ",x+16,y,backgroundColor,backgroundColor);
-} else if ( a >= 100 && a < 1000 )  { //3 digit
-  printString(" ",x+24,y,backgroundColor,backgroundColor);
-}  else if ( a >= 1000 && a < 10000 )  { //4 digit
-  printString(" ",x+32,y,backgroundColor,backgroundColor);
-}
-
+  if (a < 10) {
+    for (int i = 1; i < 4; i++)
+      printString(" ", x + (i * 8), y, backgroundColor, backgroundColor);
+  } else if (a < 100) {
+    printString(" ", x + 16, y, backgroundColor, backgroundColor);
+  } else if (a < 1000) {
+    printString(" ", x + 24, y, backgroundColor, backgroundColor);
+  } else if (a < 10000) {
+    printString(" ", x + 32, y, backgroundColor, backgroundColor);
+  }
 }
 
 void Nokia105:: lineVertical(int16_t x, int16_t y, int16_t h, uint16_t color) {
