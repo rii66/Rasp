@@ -7,7 +7,7 @@
 class Fan {
 public:
   void begin() {
-    /*=important=*/ PWM frequency is configured once by initPWM().
+    /*=important=*/ // PWM frequency is configured once by initPWM().
     pinMode(PIN_FAN_PWM, OUTPUT);
     analogWrite(PIN_FAN_PWM, 0);
     current_speed = 0;
