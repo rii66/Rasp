@@ -45,8 +45,7 @@ void setup() {
     Serial.begin(115200);
     Serial.ignoreFlowControl(true);
     delay(100);
-    Serial.println(F("
-========== Dioscuri SLAVE RP2040 BOOT TRACE =========="));
+    Serial.println(F("\r\n========== Dioscuri SLAVE RP2040 BOOT TRACE =========="));
     Serial.println(F("[BOOT 0] USB CDC serial ready"));
 
     bootMark(F("storage.begin ->"));
