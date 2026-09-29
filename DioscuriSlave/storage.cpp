@@ -93,12 +93,14 @@ static void eepromFlush(bool force = false) {
         dirty = false;
         return;
     }
+
     EEPROM.put(0, blob);
+
     if (EEPROM.commit()) {
         blobCommitted = blob;
         dirty = false;
     } else {
-        Serial.println(F("[Storage] EEPROM commit FAILED"));
+        Serial.println(F("[ERROR] EEPROM commit FAILED"));
     }
 }
 
@@ -106,30 +108,42 @@ void Storage::begin() {
     EEPROM.begin(EEPROM_SIZE);
     eepromLoad();
     if (dirty) eepromFlush(true);
-    Serial.println(F("[Storage] EEPROM ready"));
 }
 
 void Storage::loadSiroccroCalibration(uint16_t &c0, uint16_t &c1, uint16_t &c2) {
-    c0 = blob.sc_c0; c1 = blob.sc_c1; c2 = blob.sc_c2;
+    c0 = blob.sc_c0;
+    c1 = blob.sc_c1;
+    c2 = blob.sc_c2;
 }
+
 void Storage::saveSiroccroCalibration(uint16_t c0, uint16_t c1, uint16_t c2) {
-    blob.sc_c0 = c0; blob.sc_c1 = c1; blob.sc_c2 = c2;
+    blob.sc_c0 = c0;
+    blob.sc_c1 = c1;
+    blob.sc_c2 = c2;
     markDirty();
 }
 
 void Storage::loadSiroccroSettings(uint16_t &temp, uint8_t &fan) {
-    temp = blob.sc_temp; fan = blob.sc_fan;
+    temp = blob.sc_temp;
+    fan = blob.sc_fan;
 }
+
 void Storage::saveSiroccroSettings(uint16_t temp, uint8_t fan) {
-    blob.sc_temp = temp; blob.sc_fan = fan;
+    blob.sc_temp = temp;
+    blob.sc_fan = fan;
     markDirty();
 }
 
 void Storage::loadSiroccroPID(float &kp, float &ki, float &kd) {
-    kp = blob.sc_kp; ki = blob.sc_ki; kd = blob.sc_kd;
+    kp = blob.sc_kp;
+    ki = blob.sc_ki;
+    kd = blob.sc_kd;
 }
+
 void Storage::saveSiroccroPID(float kp, float ki, float kd) {
-    blob.sc_kp = kp; blob.sc_ki = ki; blob.sc_kd = kd;
+    blob.sc_kp = kp;
+    blob.sc_ki = ki;
+    blob.sc_kd = kd;
     markDirty();
 }
 
@@ -155,6 +169,7 @@ void Storage::loadSettings() {
             tipDatabase[i].adcOffset  = p.adcOffset;
         }
     }
+
     if (blob.custom.kp != 0.0f || blob.custom.ki != 0.0f || blob.custom.kd != 0.0f) {
         customTipProfile.kp = blob.custom.kp;
         customTipProfile.ki = blob.custom.ki;
@@ -185,15 +200,18 @@ void Storage::loadPID() {
 
 void Storage::savePID() {
     if (!activeTip) return;
+
     activeTip->kp = kp;
     activeTip->ki = ki;
     activeTip->kd = kd;
+
     if (activeTip == &tipDatabase[0])
         blob.tips[0] = {kp, ki, kd, activeTip->tempOffset, activeTip->adcOffset};
     else if (TOTAL_SUPPORTED_TIPS > 1 && activeTip == &tipDatabase[1])
         blob.tips[1] = {kp, ki, kd, activeTip->tempOffset, activeTip->adcOffset};
     else if (activeTip == &customTipProfile)
         blob.custom = {kp, ki, kd, activeTip->tempOffset, activeTip->adcOffset};
+
     markDirty();
 }
 
@@ -219,18 +237,23 @@ void Storage::saveSleep() {
 
 void Storage::saveCal() {
     if (!activeTip) return;
+
     activeTip->tempOffset = tempOffset;
     activeTip->adcOffset  = adcOffset;
+
     if (activeTip == &tipDatabase[0]) {
         blob.tips[0].tempOffset = tempOffset;
-        blob.tips[0].adcOffset  = adcOffset;
-    } else if (TOTAL_SUPPORTED_TIPS > 1 && activeTip == &tipDatabase[1]) {
-        blob.tips[1].tempOffset = tempOffset;
-        blob.tips[1].adcOffset  = adcOffset;
-    } else if (activeTip == &customTipProfile) {
-        blob.custom.tempOffset = tempOffset;
-        blob.custom.adcOffset  = adcOffset;
+        blob.tips[0].adcOffset = adcOffset;
     }
+    else if (TOTAL_SUPPORTED_TIPS > 1 && activeTip == &tipDatabase[1]) {
+        blob.tips[1].tempOffset = tempOffset;
+        blob.tips[1].adcOffset = adcOffset;
+    }
+    else if (activeTip == &customTipProfile) {
+        blob.custom.tempOffset = tempOffset;
+        blob.custom.adcOffset = adcOffset;
+    }
+
     markDirty();
 }
 
