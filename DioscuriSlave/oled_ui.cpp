@@ -57,5 +57,5 @@ void menu(){
  else {txt(2,15,"ITEM");num(38,15,item);txt(2,29,isEditingValue?"EDIT":"SELECT");}
 }
 }
-void initOledUI(){Wire.setSDA(PIN_OLED_SDA);Wire.setSCL(PIN_OLED_SCL);Wire.begin();oledInit();memset(fb,0,sizeof(fb));flush();ready=true;Serial.println(F("[OLED] UI ready"));}
+void initOledUI(){Wire.setSDA(PIN_OLED_SDA);Wire.setSCL(PIN_OLED_SCL);Wire.begin();oledInit();memset(fb,0,sizeof(fb));flush();ready=true;}
 void updateOledUI(){if(!ready||millis()-lastDraw<250)return;lastDraw=millis();memset(fb,0,sizeof(fb));if(inMenu)menu();else dashboard();flush();}
