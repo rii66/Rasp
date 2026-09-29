@@ -9,7 +9,6 @@ void SlaveLink::begin() {
 #if MASTER_UART_RX >= 0 && MASTER_UART_TX >= 0
     port->begin(MASTER_BAUD, SERIAL_8N1, MASTER_UART_RX, MASTER_UART_TX);
 #else
-    // Board-default UART routing for initial C3 skeleton.
     port->begin(MASTER_BAUD);
 #endif
 
@@ -82,11 +81,12 @@ void SlaveLink::handleLine(char* line) {
 bool SlaveLink::parseStatus(char* line) {
     if (strncmp(line, "OK,", 3) != 0) return false;
 
-    char* fields[13] = {};
+    // Slave sends exactly 12 fields after "OK,".
+    char* fields[12] = {};
     uint8_t count = 0;
     char* p = line + 3;
 
-    while (count < 13 && p) {
+    while (count < 12 && p) {
         fields[count++] = p;
         char* comma = strchr(p, ',');
         if (!comma) break;
@@ -94,7 +94,7 @@ bool SlaveLink::parseStatus(char* line) {
         p = comma + 1;
     }
 
-    if (count != 13) return false;
+    if (count != 12) return false;
 
     state.activeStation = atoi(fields[0]);
     state.currentTemp = atoi(fields[1]);
@@ -108,10 +108,6 @@ bool SlaveLink::parseStatus(char* line) {
     state.airHasAC = atoi(fields[9]) != 0;
     state.boostMode = atoi(fields[10]) != 0;
     state.sleeping = atoi(fields[11]) != 0;
-
-    // Protocol currently returns 12 fields after OK.
-    // Keep one spare parser slot so a future field can be added without
-    // changing the framing. Reject only malformed/truncated packets.
     state.valid = true;
     return true;
 }
