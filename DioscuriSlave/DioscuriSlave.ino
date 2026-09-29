@@ -30,35 +30,53 @@ static const uint32_t CONTROL_MS = 50;
 static const uint32_t TIP_MS     = 500;
 static uint32_t lastControl = 0, lastTip = 0;
 
+static void bootMark(const __FlashStringHelper* label) {
+    Serial.print(F("[BOOT] "));
+    Serial.println(label);
+    digitalWrite(STATUS_LED, !digitalRead(STATUS_LED));
+    delay(100);
+}
+
 void setup() {
     pinMode(STATUS_LED, OUTPUT);
-    digitalWrite(STATUS_LED, LOW); // boot belum selesai
+    digitalWrite(STATUS_LED, LOW);
 
     Serial.begin(115200);
-    delay(200);
-    Serial.println(F("========== Dioscuri SLAVE RP2040 (V1 port) =========="));
+    delay(1000);
+    Serial.println(F("\n========== Dioscuri SLAVE RP2040 BOOT TRACE =========="));
 
+    bootMark(F("storage.begin ->"));
     storage.begin();
+    bootMark(F("storage.begin OK; loadSettings ->"));
     storage.loadSettings();
+    bootMark(F("loadSettings OK; setTipProfile ->"));
     setTipProfile(currentTipMode);
+    bootMark(F("setTipProfile OK; initEncoder ->"));
 
     initEncoder();
+    bootMark(F("initEncoder OK; buzzer pin ->"));
     pinMode(BUZZER_PIN, OUTPUT);
 
+    bootMark(F("buzzer pin OK; initStations ->"));
     initStations();
+    bootMark(F("initStations OK; detectTip ->"));
     detectTip();
+    bootMark(F("detectTip OK; initMotion ->"));
     initMotion();
+    bootMark(F("initMotion OK; initUartLink ->"));
     initUartLink();
+    bootMark(F("initUartLink OK; initLcdTemps ->"));
     initLcdTemps();
+    bootMark(F("initLcdTemps OK; initOledUI ->"));
     initOledUI();
+    bootMark(F("initOledUI OK; beep ->"));
 
     lastActivity = millis();
     lastControl = lastTip = millis();
     beep();
 
-    // STATUS: semua init selesai, firmware sudah masuk normal.
     digitalWrite(STATUS_LED, HIGH);
-    Serial.println(F("[OK] slave ready — single storage.begin()"));
+    Serial.println(F("[OK] slave ready; entering loop"));
 }
 
 void loop() {
