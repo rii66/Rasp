@@ -13,7 +13,10 @@
 
 static char rxBuf[64];
 static uint8_t rxLen = 0;
-static unsigned long lastTelem = 0;
+
+static bool masterDetected = false;
+static uint32_t lastMasterRx = 0;
+static const uint32_t MASTER_TIMEOUT_MS = 5000;
 
 static void sendStatus() {
     LINK.printf("OK,%d,%d,%d,%d,%d,%u,%u,%u,%d,%d,%d,%d\n",
@@ -22,26 +25,75 @@ static void sendStatus() {
         airIsOn() ? 1 : 0, airHasAC() ? 1 : 0, boostMode ? 1 : 0, sleeping ? 1 : 0);
 }
 
+static void markMasterActivity() {
+    lastMasterRx = millis();
+
+    if (!masterDetected) {
+        masterDetected = true;
+        Serial.println(F("[UART] MASTER detected ✓"));
+        Serial.println(F("[UART] Link active ✓"));
+    }
+}
+
 static void handleLine(char *line) {
-    for (char *p = line; *p; p++) if (*p == '\r') { *p = 0; break; }
+    for (char *p = line; *p; p++) {
+        if (*p == '\r') {
+            *p = 0;
+            break;
+        }
+    }
+
     if (!line[0]) return;
+
+    markMasterActivity();
+
+    // Master opens the link explicitly.
+    if (!strcmp(line, "HELLO") || !strcmp(line, "PING")) {
+        LINK.println(F("PONG"));
+        return;
+    }
+
     char cmd = line[0];
     char *arg = (line[1] == ':') ? &line[2] : nullptr;
 
     switch (cmd) {
-        case 'T': if (arg) {
+        case 'T':
+            if (arg) {
                 int lim = (maxTemp > 0) ? maxTemp : TEMP_MAX_T12;
                 int t = constrain(atoi(arg), TEMP_MIN, lim);
                 targetTemp = t;
                 wakeFromSleep();
-              } break;
-        case 'H': if (arg) { airSetTemp((uint16_t)constrain(atoi(arg), TEMP_MIN_C, TEMP_MAX_HOTAIR)); } break;
-        case 'F': if (arg) { airSetFan((uint8_t)constrain(atoi(arg), 0, 255)); } break;
-        case 'P': if (arg) { airSwitchPower(atoi(arg) != 0); } break;
-        case 'B': startBoost(); break;
-        case 'S': sendStatus(); break;
-        case 'Z': LINK.println(F("PONG")); break;
-        default: break;
+            }
+            break;
+
+        case 'H':
+            if (arg) {
+                airSetTemp((uint16_t)constrain(atoi(arg), TEMP_MIN_C, TEMP_MAX_HOTAIR));
+            }
+            break;
+
+        case 'F':
+            if (arg) {
+                airSetFan((uint8_t)constrain(atoi(arg), 0, 255));
+            }
+            break;
+
+        case 'P':
+            if (arg) {
+                airSwitchPower(atoi(arg) != 0);
+            }
+            break;
+
+        case 'B':
+            startBoost();
+            break;
+
+        case 'S':
+            sendStatus();
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -50,23 +102,33 @@ void initUartLink() {
     LINK.setTX(PIN_UART_TX);
     LINK.setRX(PIN_UART_RX);
 #endif
+
     LINK.begin(UART_BAUD);
-    Serial.println(F("[UART] slave link ready"));
+    masterDetected = false;
+    lastMasterRx = 0;
 }
 
 void updateUartLink() {
     while (LINK.available()) {
         char c = (char)LINK.read();
+
         if (c == '\n') {
             rxBuf[rxLen] = 0;
             handleLine(rxBuf);
             rxLen = 0;
-        } else if (rxLen < sizeof(rxBuf) - 1) {
+        }
+        else if (rxLen < sizeof(rxBuf) - 1) {
             rxBuf[rxLen++] = c;
-        } else rxLen = 0;
+        }
+        else {
+            rxLen = 0;
+        }
     }
-    if (millis() - lastTelem >= 200) {
-        lastTelem = millis();
-        sendStatus();
+
+    // No autonomous TX when master is absent.
+    // Once a master was seen, require periodic RX activity to keep the link active.
+    if (masterDetected && (millis() - lastMasterRx >= MASTER_TIMEOUT_MS)) {
+        masterDetected = false;
+        Serial.println(F("[UART] Master timeout; link idle"));
     }
 }
