@@ -55,8 +55,8 @@ const int TOTAL_SUPPORTED_TIPS =
 
 TipConfig customTipProfile = {
     TIP_CUSTOM,
-    0,
-    1023,
+    ADC_CUSTOM_MIN,
+    ADC_CUSTOM_MAX,
     2.0f,
     0.05f,
     0.8f,
@@ -99,12 +99,11 @@ void applyTipProfile(TipConfig *targetTip)
 
     tempOffset = targetTip->tempOffset;
     adcOffset  = targetTip->adcOffset;
-    
+
     maxPwmLimit = constrain(targetTip->maxPWM, 0, PWM_MAX_VAL);
 
     if (maxTemp > 0 && targetTemp > maxTemp)
-    targetTemp = maxTemp;
-
+        targetTemp = maxTemp;
 }
 
 
@@ -135,6 +134,6 @@ void setTipProfile(int mode)
             break;
     }
 
-        if (maxTemp > 0 && targetTemp > maxTemp)
+    if (maxTemp > 0 && targetTemp > maxTemp)
         targetTemp = maxTemp;
 }
