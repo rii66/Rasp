@@ -109,7 +109,8 @@ void Nokia105::initDisplay(bool doReset) {
   delay(10);
   displayOn();
   delay(10);
-  displayClear();
+
+  // No full-screen clear here: startup must stay lightweight.
 }
 
 void Nokia105::setDrawPosition(unsigned char x, unsigned char y) {
@@ -151,59 +152,49 @@ writeNokiaData(color);
 
 void Nokia105:: image1d (uint16_t w, uint16_t h, uint16_t shiftX,uint16_t shiftY, const uint16_t image[] ) {
 int l = 0;
-for (int y = 0; y < h; y++) { //h
-  for (int x = 0; x < w; x++) { //w
+for (int y = 0; y < h; y++) {
+  for (int x = 0; x < w; x++) {
     drawPixel( x+shiftX, y+shiftY, pgm_read_word(&(image[l])));
     l++;
     }
   }
 }
-//--------------------------------Working---------------------------------------------------
-//const uint16_t (image[][80] //parsing of 2d array like this
-/* void Nokia105:: image2d (int w, int h, int shiftX,int shiftY, const uint16_t image[][] ) {
-int l = 0;
-for (int y = 0; y < h; y++) { //h
-  for (int x = 0; x < w; x++) { //w
-    drawPixel(x+shiftX , y+shiftY, pgm_read_word(&(image[y][x])));
-    l++;
-    }
-  }
-}
-*/
-//--------------------------------beta test-------------------------------------------------
+
+/* void Nokia105:: image2d ... */
+
+/* beta */
 void Nokia105:: drawtext(unsigned char c, unsigned char x, unsigned char y ,uint16_t color) {
 unsigned char k,Mline,Ctemp;
 setDrawPosition(x,y);
 
-c -= 0x20; //asic value conversion
+c -= 0x20;
 
 for (Mline = 0; Mline < 16; Mline++) {
   Ctemp = text[c][Mline];
   for(k = 0; k < 8; k++) {
     if(Ctemp & 0x80) {
-      writeNokiaData(color>>8); 
+      writeNokiaData(color>>8);
       writeNokiaData(color);
     } else {
-      writeNokiaData(0x00>>8); 
+      writeNokiaData(0x00>>8);
       writeNokiaData(0x00);
     }
     Ctemp=Ctemp>>1;
+    }
+    setDrawPosition(x,++y);
   }
-  setDrawPosition(x,++y); 
-}
 }
 
 
 void Nokia105:: fillRectangle (int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-// rudimentary clipping (drawChar w/big text requires this)
-if((x >= WIDTH) || (y >= HEIGHT)) return; // Fully off right or bottom
+if((x >= WIDTH) || (y >= HEIGHT)) return;
 int16_t x2, y2;
 if(((x2 = x + w - 1) < 0) ||
-   ((y2 = y + h - 1) < 0)) return; // Fully off left or top
-if(x2 >= WIDTH)  w = WIDTH  - x; // Clip right
-if(x < 0) { w += x; x = 0; }       // Clip left
-if(y2 >= HEIGHT) h = HEIGHT - y; // Clip bottom
-if(y < 0) { h += y; y = 0; }       // Clip top
+   ((y2 = y + h - 1) < 0)) return;
+if(x2 >= WIDTH)  w = WIDTH  - x;
+if(x < 0) { w += x; x = 0; }
+if(y2 >= HEIGHT) h = HEIGHT - y;
+if(y < 0) { h += y; y = 0; }
 
 setDrawPositionAxis(x, y, x+w-1, y+h-1);
 
@@ -217,20 +208,18 @@ while(i--) {
 }
 
 void Nokia105:: smpteTest() {
-fillRectangle(0,0,18,160,WHITE); // HEIGHTYPOS, WIDTHXPOS, STARTYPOS, STARTXPOS, ENDY,ENDX
-fillRectangle(18,0,36,160,BLUE); // HEIGHT, WIDTH
-fillRectangle(36,0,54,160,RED); // HEIGHT, WIDTH
-fillRectangle(54,0,72,160,GREEN); // HEIGHT, WIDTH
-fillRectangle(72,0,90,160,CYAN); // HEIGHT, WIDTH
-fillRectangle(90,0,108,160,MAGENTA); // HEIGHT, WIDTH
-fillRectangle(108,0,126,160,YELLOW); // HEIGHT, WIDTH
-fillRectangle(126,0,190,160,BLACK); // HEIGHT, WIDTH
+fillRectangle(0,0,18,160,WHITE);
+fillRectangle(18,0,36,160,BLUE);
+fillRectangle(36,0,54,160,RED);
+fillRectangle(54,0,72,160,GREEN);
+fillRectangle(72,0,90,160,CYAN);
+fillRectangle(90,0,108,160,MAGENTA);
+fillRectangle(108,0,126,160,YELLOW);
+fillRectangle(126,0,190,160,BLACK);
 }
 
-void Nokia105:: printBitmap(int16_t x, int16_t y, const uint8_t bitmap[],int16_t w, int16_t h, uint16_t color) {  
-int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
-//int16_t byteWidth = 16.8;
-
+void Nokia105:: printBitmap(int16_t x, int16_t y, const uint8_t bitmap[],int16_t w, int16_t h, uint16_t color) {
+int16_t byteWidth = (w + 7) / 8;
 uint8_t byte = 0;
 
 for (int16_t j = 0; j < h; j++, y++) {
@@ -260,17 +249,10 @@ for( y = HEIGHT; y > 0; y--) {
 
 void Nokia105:: colorPalletTest() {
 int colorPallete[] = {WHITE,BLUE,RED,GREEN,CYAN,MAGENTA,YELLOW,NAVY,DARKGREEN,DARKCYAN,MAROON,PURPLE,OLIVE,LIGHTGREY,DARKGREY,ORANGE,PINK};
-  for(int i=0; i < 10; i++) {
+  for(int i = 0; i < 10; i++) {
     backgroundColor(colorPallete[i]);
-    //Generate complete frame
-    //   for (int y = 0; y < HEIGHT-1; y++) {
-    //   for (int x = 0; x < WIDTH-1; x++) {
-    //     writeNokiaData(colorPallete[1]>>8); //16 bit color chunks me jaengy
-    //     writeNokiaData(colorPallete[1]);
-    //   }
-    // }
-    delay(800);  
-  }  
+    delay(800);
+  }
 }
 
 void Nokia105:: circle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
@@ -324,17 +306,17 @@ void Nokia105::printDigit(unsigned int a, int16_t x, int16_t y, uint16_t forgrou
 }
 
 void Nokia105:: lineVertical(int16_t x, int16_t y, int16_t h, uint16_t color) {
-if ((x < 0) || (x >= WIDTH ) || (y >= HEIGHT)) return; 
+if ((x < 0) || (x >= WIDTH ) || (y >= HEIGHT)) return;
 int16_t y2 = y + h - 1;
 
 if (y2 < 0) return;
 
 if (y2 >= HEIGHT) {
-  h = HEIGHT - y;    // Clip bottom 
+  h = HEIGHT - y;
 }
 
-if (y < 0) {         // Clip top 
-  h += y; y = 0; 
+if (y < 0) {
+  h += y; y = 0;
 }
 
 setDrawPositionAxis(x, y, x, y+h-1);
@@ -348,18 +330,18 @@ while (h--) {
 
 
 void Nokia105:: lineHorixontal(int16_t x, int16_t y, int16_t w,uint16_t color) {
-if((y < 0) || (y >= HEIGHT )|| (x >= WIDTH)) return; // Fully off top or bottom and Fully off right
+if((y < 0) || (y >= HEIGHT )|| (x >= WIDTH)) return;
 
 int16_t x2 = x + w - 1;
 
-if (x2 < 0) return;                   // Fully off left
+if (x2 < 0) return;
 
-if (x2 >= WIDTH) { // Clip right
-  w = WIDTH - x;   
+if (x2 >= WIDTH) {
+  w = WIDTH - x;
 }
-if (x < 0) { // Clip left
-  w += x; x = 0; 
-}         
+if (x < 0) {
+  w += x; x = 0;
+}
 
 setDrawPositionAxis(x, y, x+w-1, y);
 
@@ -370,57 +352,54 @@ while (w--) {
 }
 }
 
-void Nokia105:: printSingleChar ( unsigned char c,unsigned char x, unsigned char y,uint16_t forgroundColor, uint16_t backgroundColor) {
+void Nokia105:: printSingleChar ( unsigned char c,unsigned char x,unsigned char y,uint16_t forgroundColor,uint16_t backgroundColor) {
 unsigned char k,Mline,Ctemp;
 setDrawPosition(x,y);
-c -= 0x20;  //to get chracters from fonts
+c -= 0x20;
 
-for (Mline = 0; Mline < 16; Mline++) { //font has 16 rows of data
-  Ctemp = font8x16[c][Mline]; //one row extracted put in ctemp
-  for(k = 0; k < 8; k++) { //ctemp, each rows has 8 bit of data of font or char
-    if(Ctemp & 0x01) { //LSB, true: character bi present
-      writeNokiaData(forgroundColor>>8); //print color at that position
+for (Mline = 0; Mline < 16; Mline++) {
+  Ctemp = font8x16[c][Mline];
+  for(k = 0; k < 8; k++) {
+    if(Ctemp & 0x01) {
+      writeNokiaData(forgroundColor>>8);
       writeNokiaData(forgroundColor);
     } else {
-      writeNokiaData(backgroundColor>>8); //BACKGOUND color
+      writeNokiaData(backgroundColor>>8);
       writeNokiaData(backgroundColor);
     }
-    Ctemp=Ctemp>>1; //next bit of data of current row
+    Ctemp=Ctemp>>1;
   }
-  setDrawPosition(x,++y); //increase y position
+  setDrawPosition(x,++y);
 }
 }
 
-//void Nokia105:: printStringChar(unsigned char *String,unsigned char x,unsigned char y,uint16_t forgroundColor, uint16_t backgroundColor) {
-void Nokia105:: printStringChar( const char *String,unsigned char x,unsigned char y,uint16_t forgroundColor, uint16_t backgroundColor) {
-while ( * String ) {
-  printSingleChar ( *String++,x,y,forgroundColor,backgroundColor);
-  x+=8;     
+void Nokia105:: printStringChar(const char *String,unsigned char x,unsigned char y,uint16_t forgroundColor,uint16_t backgroundColor) {
+while (*String) {
+  printSingleChar(*String++,x,y,forgroundColor,backgroundColor);
+  x+=8;
 }
 }
 
-//void Nokia105:: printString(uint8_t *str,uint8_t x,uint8_t y,uint16_t forgroundColor, uint16_t backgroundColor) {                              
-void Nokia105:: printString(const char *str,uint8_t x,uint8_t y,uint16_t forgroundColor, uint16_t backgroundColor) {                              
-while(*str!=0) { 
-  if (x > nextLineEdge) {        // old->112          
-     y += spaceBetweenScanLines; //old->16
-     x = 0;                     //reset the position to rewrite from start position of x
+void Nokia105:: printString(const char *str,uint8_t x,uint8_t y,uint16_t forgroundColor,uint16_t backgroundColor) {
+while(*str!=0) {
+  if (x > nextLineEdge) {
+    y += spaceBetweenScanLines;
+    x = 0;
     if (LOG){
       Serial.println("RESET X = 0 ");
     }
-       
-   }                 
-   if (y > fullLengthVertical) //old->144 //OVERFLOW EXIT OR ERROR ADD UP
-    break;      
-   if(LOG) {
-     Serial.println("Single Char: ");
-     Serial.println(*str);
-   }
-    printSingleChar (*str,x,y,forgroundColor,backgroundColor);
-    str++; 
-    x+=8; 
   }
-} 
+  if (y > fullLengthVertical)
+    break;
+  if(LOG) {
+    Serial.println("Single Char: ");
+    Serial.println(*str);
+  }
+  printSingleChar(*str,x,y,forgroundColor,backgroundColor);
+  str++;
+  x+=8;
+}
+}
 
 void Nokia105::PWMinit() {
   if (backLightPin >= 0) {
