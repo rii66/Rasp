@@ -43,7 +43,17 @@ const char*pn(){switch(page){case PAGE_SET:return"SET";case PAGE_BOOST:return"BO
 void menu(){
  txt(2,1,"MENU");txt(42,1,pn());
  if(isStationMenu()){const char*n[]={"SOLDER","HOT AIR","SAVE","EXIT"};for(int i=0;i<4;i++){if(i==getStationItem())txt(2,13+i*12,">");txt(10,13+i*12,n[i]);}return;}
- if(page==PAGE_SET){const char*n[]={"STATION","TEMP","BOOST","SLEEP","CAL","PID","TIP","BUZZER","SAVE","EXIT"};for(int i=0;i<SET_COUNT&&i<4;i++){if(i==item)txt(2,13+i*12,">");txt(10,13+i*12,n[i]);}if(isEditingValue&&item==SET_TEMP){txt(58,49,"EDIT");num(82,49,activeStation==STATION_MODE_HOTAIR?airGetTargetTemp():targetTemp);}}
+ if(page==PAGE_SET){
+   const char*n[]={"STATION","TEMP","BOOST","SLEEP","CAL","PID","TIP","BUZZER","SAVE","EXIT"};
+   const int first = (item / 4) * 4;
+   for(int row=0;row<4;row++){
+     const int idx = first + row;
+     if(idx >= SET_COUNT) break;
+     if(idx == item) txt(2,13+row*12,">");
+     txt(10,13+row*12,n[idx]);
+   }
+   if(isEditingValue&&item==SET_TEMP){txt(58,49,"EDIT");num(82,49,activeStation==STATION_MODE_HOTAIR?airGetTargetTemp():targetTemp);}
+ }
  else {txt(2,15,"ITEM");num(38,15,item);txt(2,29,isEditingValue?"EDIT":"SELECT");}
 }
 }
