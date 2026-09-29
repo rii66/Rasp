@@ -76,10 +76,10 @@ int getEncoderDelta() {
 int getEncoder2Delta() {
   static int lastLogicPos2 = 0;
   int currentLogicPos2 = encoder2Pos / 4;
-  int diff = currentLogicPos - lastLogicPos2;
+  int diff = currentLogicPos2 - lastLogicPos2;
 
   if (diff != 0) {
-    lastLogicPos2 = currentLogicPos;
+    lastLogicPos2 = currentLogicPos2;
     return diff;
   }
   return 0;
