@@ -62,7 +62,8 @@ void executePageSelect() {
     // ===== SETTING =====
     case PAGE_SET:
       if (item == SET_SAVE || item == SET_EXIT) {
-        //saveSettings();
+        saveSettings();
+        storageFlush();
         beepSave();
         inEdit = false;
       }
@@ -82,7 +83,8 @@ void executePageSelect() {
     // ===== BOOST =====
     case PAGE_BOOST:
       if (item == BOOST_SAVE || item == BOOST_EXIT) {
-      //  saveBoost();
+      saveBoost();
+        storageFlush();
         beepSave();
         inEdit = false;
       } else {
@@ -93,7 +95,8 @@ void executePageSelect() {
     // ===== SLEEP =====
     case PAGE_SLEEP:
       if (item == SLEEP_SAVE || item == SLEEP_EXIT) {
-      //  saveSleep();
+      saveSleep();
+        storageFlush();
         beepSave();
         inEdit = false;
       } else {
@@ -104,7 +107,8 @@ void executePageSelect() {
     // ===== CALIBRATION =====
     case PAGE_CAL:
       if (item == CAL_SAVE || item == CAL_EXIT) {
-      //  saveCal();
+      saveCal();
+        storageFlush();
         beepSave();
         inEdit = false;
       }
@@ -116,7 +120,8 @@ void executePageSelect() {
     // ===== PID =====
     case PAGE_PID:
       if (item == PID_SAVE || item == PID_EXIT) {
-      //  saveActivePID();
+      saveActivePID();
+        storageFlush();
         beepSave();
         inEdit = false;
       }
@@ -128,7 +133,8 @@ void executePageSelect() {
     // ===== TIP =====
     case PAGE_TIP:
       if (item == TIP_ITEM_SAVE) {
-        //saveTip();
+        saveTip();
+        storageFlush();
         beepSave();
         inEdit = false;
       }
@@ -153,7 +159,8 @@ void executePageSelect() {
     // ===== BUZZER =====
     case PAGE_BUZZER:
       if (item == BUZ_SAVE || item == BUZ_EXIT) {
-     //   saveBuzzer();
+     saveBuzzer();
+        storageFlush();
         beepSave();
         inEdit = false;
       }
