@@ -134,8 +134,6 @@ void initLcdTemps() {
 
     ready = true;
     lastDraw = 0;
-
-    Serial.println(F("[LCD] Nokia105 ready: CS1=Solder CS2=HotAir"));
 }
 
 void updateLcdTemps() {
