@@ -29,6 +29,9 @@ static const uint32_t TIP_MS     = 500;
 static uint32_t lastControl = 0, lastTip = 0;
 
 void setup() {
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW); // boot belum selesai
+
     Serial.begin(115200);
     delay(200);
     Serial.println(F("========== Dioscuri SLAVE RP2040 (V1 port) =========="));
@@ -50,6 +53,9 @@ void setup() {
     lastActivity = millis();
     lastControl = lastTip = millis();
     beep();
+
+    // STATUS: semua init selesai, firmware sudah masuk normal.
+    digitalWrite(LED_BUILTIN, HIGH);
     Serial.println(F("[OK] slave ready — single storage.begin()"));
 }
 
