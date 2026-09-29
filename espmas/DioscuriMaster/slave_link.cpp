@@ -62,7 +62,14 @@ void SlaveLink::update() {
 }
 
 void SlaveLink::handleLine(char* line) {
+    // Slave uses println(), so accept CRLF cleanly.
     while (*line == '\r' || *line == ' ') line++;
+
+    char* end = line + strlen(line);
+    while (end > line && (end[-1] == '\r' || end[-1] == ' ')) {
+        *--end = 0;
+    }
+
     if (!*line) return;
 
     if (!strcmp(line, SlaveProtocol::PONG)) {
