@@ -4,6 +4,7 @@
  * master ESP opsional via UART
  */
 #include <Arduino.h>
+#include <string.h>
 #include "config.h"
 #include "GlobalState.h"
 #include "storage.h"
@@ -127,14 +128,8 @@ void setup() {
     pinMode(BUZZER_PIN, OUTPUT);
     bootMark(F("Buzzer"));
 
-    initPWM();
-    bootMark(F("Solder PWM"));
-
-    initPTC();
-    bootMark(F("PTC"));
-
-    initAirHandler();
-    bootMark(F("Hot-Air + Fan PWM"));
+    initStations();
+    bootMark(F("Stations / PWM / Hot-Air + Fan"));
 
     detectTip();
     bootMark(F("Tip detect"));
