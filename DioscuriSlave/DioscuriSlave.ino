@@ -24,13 +24,15 @@
 #include "oled_ui.h"
 #include "platform_compat.h"
 
+#define STATUS_LED 25
+
 static const uint32_t CONTROL_MS = 50;
 static const uint32_t TIP_MS     = 500;
 static uint32_t lastControl = 0, lastTip = 0;
 
 void setup() {
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW); // boot belum selesai
+    pinMode(STATUS_LED, OUTPUT);
+    digitalWrite(STATUS_LED, LOW); // boot belum selesai
 
     Serial.begin(115200);
     delay(200);
@@ -55,7 +57,7 @@ void setup() {
     beep();
 
     // STATUS: semua init selesai, firmware sudah masuk normal.
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(STATUS_LED, HIGH);
     Serial.println(F("[OK] slave ready — single storage.begin()"));
 }
 
