@@ -37,13 +37,9 @@ static void drawSolderScreen(bool force) {
     lastSleep = sleeping;
     lastBoost = boostMode;
 
-    lcdSolder.backgroundColor(BLACK);
-
-    // Header
     lcdSolder.printString("SOLDER", 4, 2, CYAN, BLACK);
     lcdSolder.lineHorixontal(0, 20, 160, DARKGREY);
 
-    // Actual / target
     lcdSolder.printString("ACT", 4, 27, LIGHTGREY, BLACK);
     lcdSolder.printDigit(ct < 0 ? 0 : (unsigned)ct, 30, 25, WHITE, BLACK);
     lcdSolder.printString("C", 88, 25, WHITE, BLACK);
@@ -52,7 +48,6 @@ static void drawSolderScreen(bool force) {
     lcdSolder.printDigit(tt < 0 ? 0 : (unsigned)tt, 30, 49, GREEN, BLACK);
     lcdSolder.printString("C", 88, 49, GREEN, BLACK);
 
-    // Output/status
     if (tipError) {
         lcdSolder.printString("NO TIP", 105, 27, RED, BLACK);
     } else if (sleeping) {
@@ -103,8 +98,6 @@ static void drawHotAirScreen(bool force) {
     lastAirOn = on;
     lastAirMode = mode;
 
-    lcdHotAir.backgroundColor(BLACK);
-
     lcdHotAir.printString("HOT AIR", 4, 2, MAGENTA, BLACK);
     lcdHotAir.lineHorixontal(0, 20, 160, DARKGREY);
 
@@ -120,7 +113,7 @@ static void drawHotAirScreen(bool force) {
                           on ? GREEN : DARKGREY, BLACK);
 
     char buf[16];
-    snprintf(buf, sizeof(buf), "POWER %d%%", (power * 100) / 255);
+    snprintf(buf, sizeof(buf), "POWER %d%%", power);
     lcdHotAir.printString(buf, 4, 77, YELLOW, BLACK);
 
     snprintf(buf, sizeof(buf), "FAN %d%%", (fan * 100) / 255);
@@ -132,23 +125,17 @@ static void drawHotAirScreen(bool force) {
 }
 
 void initLcdTemps() {
-    // Shared RST: only the first panel performs the hardware reset.
+    // Lightweight startup: no full-screen background/clear.
     lcdSolder.initDisplay();
     lcdSolder.setRotation(1);
-    lcdSolder.backgroundColor(BLACK);
 
     lcdHotAir.initDisplay(false);
     lcdHotAir.setRotation(1);
-    lcdHotAir.backgroundColor(BLACK);
 
     ready = true;
     lastDraw = 0;
-    delay(50);
 
-    drawSolderScreen(true);
-    drawHotAirScreen(true);
-
-    Serial.println(F("[LCD] Nokia105 landscape: CS1=Solder CS2=HotAir"));
+    Serial.println(F("[LCD] Nokia105 ready: CS1=Solder CS2=HotAir"));
 }
 
 void updateLcdTemps() {
