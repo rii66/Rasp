@@ -1,4 +1,5 @@
 #ifndef CONFIG_H
+
 #define CONFIG_H
 
 #include <stdint.h>
@@ -47,7 +48,7 @@
 // ---- PWM / heater ----
 #define PWM_PIN              17   // GP17 = physical pin 22
 #define PIN_HEATER_AC        18   // GP18 = physical pin 24
-#define PIN_FAN_PWM          19   // GP19 = physical pin 25
+#define PIN_FAN_PWM          19
 #define PIN_ZERO_CROSS       22   // GP22 = physical pin 29
 #define BUZZER_PIN           28   // GP28/ADC2 = physical pin 34
 
@@ -86,8 +87,10 @@
 
 #define ADC_NO_TIP           150
 #define ADC_NO_TIP_PTC       4000
-#define ADC_CUSTOM_MIN       501
-#define ADC_CUSTOM_MAX       599
+
+// PTC/CUSTOM ADC calibration endpoints
+#define ADC_CUSTOM_MIN       700
+#define ADC_CUSTOM_MAX       1515
 
 #define PWM_FREQ             20000
 #define PWM_RES              8
