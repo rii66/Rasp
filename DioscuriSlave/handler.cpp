@@ -34,10 +34,24 @@ void handleAirButton() {
 }
 
 void updateAirFanFromPot() {
+    static uint32_t lastRead = 0;
+    static int lastSpeed = -1;
+
+    if (millis() - lastRead < 50) return;
+    lastRead = millis();
+
     int raw = analogRead(PIN_POT_FAN);
+    raw = constrain(raw, 0, 4095);
+
     int speed = map(raw, 0, 4095, 0, 255);
 
-    if (speed < FAN_MIN_SPEED / 2) speed = 0;
+    // Dead zone near zero: fan benar-benar OFF.
+    if (speed < FAN_MIN_SPEED / 2)
+        speed = 0;
+
+    // Jangan tulis PWM berulang jika nilai tidak berubah.
+    if (speed == lastSpeed) return;
+    lastSpeed = speed;
 
     airSetFan((uint8_t)speed);
 }
