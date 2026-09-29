@@ -5,7 +5,5 @@
 
 void initStations();
 void updateStations();   // updatePID + updateAirHandler
-void handleStationEncoder(int delta);
-void handleStationButton();
 
 #endif
