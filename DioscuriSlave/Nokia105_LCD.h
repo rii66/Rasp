@@ -32,10 +32,10 @@
 */
 //----------------------------macros to Manipulate display-----------------------------------
 #ifndef NOKIA105_WIDTH
-#define NOKIA105_WIDTH  160
+#define NOKIA105_WIDTH  128
 #endif
 #ifndef NOKIA105_HEIGHT
-#define NOKIA105_HEIGHT 128
+#define NOKIA105_HEIGHT 160
 #endif
 #ifndef NOKIA105_X_OFFSET
 #define NOKIA105_X_OFFSET 2
