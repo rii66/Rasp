@@ -99,50 +99,27 @@ void Nokia105::initDisplay(bool doReset) {
 
   if (doReset) reset();
 
-  // SPFD54124B init sequence
+  // Exact tested ESP32-C3 TesLcd sequence.
   writeNokiaCommand(NOKIA105_SWRESET);
   delay(120);
-
-  writeNokiaCommand(0xBA);
-  writeNokiaData(0x07);
-  writeNokiaData(0x15);
-
-  writeNokiaCommand(0x25);
-  writeNokiaData(0x3F);
 
   writeNokiaCommand(NOKIA105_SPLOUT);
   delay(120);
 
-  writeNokiaCommand(NOKIA105_NORON);
-  delay(10);
-
-  writeNokiaCommand(0x37);
-  writeNokiaData(0x00);
-
   writeNokiaCommand(NOKIA105_COLMOD);
   writeNokiaData(0x05);
 
-  // Keep existing rotation unchanged.
   setRotation(0);
 
-  writeNokiaCommand(NOKIA105_DISPON);
-  delay(10);
-
-  writeNokiaCommand(NOKIA105_INVOFF);
   writeNokiaCommand(NOKIA105_NORON);
   delay(10);
 
-  // RGB lookup table required by SPFD54124B.
-  writeNokiaCommand(NOKIA105_RGBSET);
-  for (uint8_t i = 0; i < 32; i++) writeNokiaData(i << 1);
-  for (uint8_t i = 0; i < 64; i++) writeNokiaData(i);
-  for (uint8_t i = 0; i < 32; i++) writeNokiaData(i << 1);
+  displayOn();
+  delay(10);
+
+  displayClear();
 }
 
-
-void Nokia105::setDrawPosition(unsigned char x, unsigned char y) {
-  setDrawPositionAxis(x, y, x + 7, y + 15);
-}
 
 void Nokia105::setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
   uint8_t t0, t1;
