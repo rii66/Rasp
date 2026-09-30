@@ -96,22 +96,49 @@ void Nokia105::initDisplay(bool doReset) {
   digitalWrite(SPIDEVICE_CS, HIGH);
   digitalWrite(SPIDEVICE_SCK, LOW);
   digitalWrite(SPIDEVICE_SDA, LOW);
+
   if (doReset) reset();
 
+  // SPFD54124B init sequence
   writeNokiaCommand(NOKIA105_SWRESET);
   delay(120);
+
+  writeNokiaCommand(0xBA);
+  writeNokiaData(0x07);
+  writeNokiaData(0x15);
+
+  writeNokiaCommand(0x25);
+  writeNokiaData(0x3F);
+
   writeNokiaCommand(NOKIA105_SPLOUT);
   delay(120);
-  writeNokiaCommand(NOKIA105_COLMOD);
-  writeNokiaData(0x05);
-  setRotation(0);
+
   writeNokiaCommand(NOKIA105_NORON);
   delay(10);
-  displayOn();
+
+  writeNokiaCommand(0x37);
+  writeNokiaData(0x00);
+
+  writeNokiaCommand(NOKIA105_COLMOD);
+  writeNokiaData(0x05);
+
+  // Keep existing rotation unchanged.
+  setRotation(0);
+
+  writeNokiaCommand(NOKIA105_DISPON);
   delay(10);
 
-  // No full-screen clear here: startup must stay lightweight.
+  writeNokiaCommand(NOKIA105_INVOFF);
+  writeNokiaCommand(NOKIA105_NORON);
+  delay(10);
+
+  // RGB lookup table required by SPFD54124B.
+  writeNokiaCommand(NOKIA105_RGBSET);
+  for (uint8_t i = 0; i < 32; i++) writeNokiaData(i << 1);
+  for (uint8_t i = 0; i < 64; i++) writeNokiaData(i);
+  for (uint8_t i = 0; i < 32; i++) writeNokiaData(i << 1);
 }
+
 
 void Nokia105::setDrawPosition(unsigned char x, unsigned char y) {
   setDrawPositionAxis(x, y, x + 7, y + 15);
