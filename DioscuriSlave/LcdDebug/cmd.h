@@ -1,0 +1,12 @@
+#ifndef _CMD_H
+#define _CMD_H
+#define NOKIA105_SWRESET 0x01
+#define NOKIA105_SPLOUT 0x11
+#define NOKIA105_NORON   0x13
+#define NOKIA105_DISPON 0x29
+#define NOKIA105_CASET  0x2A
+#define NOKIA105_PASET  0x2B
+#define NOKIA105_RAMWR  0x2C
+#define NOKIA105_COLMOD 0x3A
+#define NOKIA105_MADCTL 0x36
+#endif
