@@ -4,12 +4,15 @@
 #include "GlobalState.h"
 
 void initPWM() {
+    pinMode(PWM_PIN, OUTPUT);
+    digitalWrite(PWM_PIN, LOW);
+
 #if defined(ARDUINO_ARCH_RP2040)
-  analogWriteRange(PWM_MAX_VAL);
-  analogWriteFreq(PWM_FREQ);   
+    analogWriteRange(PWM_MAX_VAL);
+    analogWriteFreq(PWM_FREQ);
 #endif
-  pinMode(PWM_PIN, OUTPUT);
-  analogWrite(PWM_PIN, 0);
+
+    analogWrite(PWM_PIN, 0);
 }
 
 void heaterOff() {
