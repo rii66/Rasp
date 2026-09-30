@@ -1,16 +1,18 @@
-#include "../config.h"
-#include "../Nokia105_LCD.h"
+#include "config.h"
+#include "Nokia105_LCD.h"
 
 Nokia105 lcd(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS1);
 
 void setup() {
   Serial.begin(115200);
   delay(500);
+
   Serial.println("=== NOKIA LCD DEBUG ===");
+  Serial.println("CS=GP2 SDA=GP1 SCK=GP0 RST=GP6");
 
   lcd.initDisplay();
-  Serial.println("LCD INIT OK");
 
+  Serial.println("LCD INIT OK");
   lcd.backgroundColor(RED);
   Serial.println("RED OK");
 }
