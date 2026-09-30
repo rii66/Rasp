@@ -121,6 +121,10 @@ void Nokia105::initDisplay(bool doReset) {
 }
 
 
+void Nokia105::setDrawPosition(unsigned char x, unsigned char y) {
+  setDrawPositionAxis(x, y, x, y);
+}
+
 void Nokia105::setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
   uint8_t t0, t1;
   switch (rotationValue) {
