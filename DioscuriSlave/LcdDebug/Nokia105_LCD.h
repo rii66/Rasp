@@ -2,7 +2,6 @@
 #define _NOKIA105_LCD_H
 
 #include <Arduino.h>
-#include "fonts.h"
 
 #define LCD_RES_High() digitalWrite(SPIDEVICE_RES, HIGH)
 #define LCD_RES_Low()  digitalWrite(SPIDEVICE_RES, LOW)
@@ -41,6 +40,7 @@ public:
 private:
   void writeNokiaCommand(unsigned char c);
   void writeNokiaData(unsigned char c);
+
   int SPIDEVICE_CS;
   int SPIDEVICE_RES;
   int SPIDEVICE_SDA;
