@@ -38,7 +38,7 @@
 #define PIN_ENC2_SW          12   // GP12 = physical pin 16
 
 // ---- Analog / sleep ----
-#define PIN_POT_FAN          14   // GP14 = physical pin 19
+#define PIN_POT_FAN          28   // GP28/ADC2 = physical pin 34
 #define MOTION_PIN           15   // GP15 = physical pin 20
 #define PIN_SLEEP2           16   // GP16 = physical pin 21
 
@@ -50,7 +50,10 @@
 #define PIN_HEATER_AC        18   // GP18 = physical pin 24
 #define PIN_FAN_PWM          19
 #define PIN_ZERO_CROSS       22   // GP22 = physical pin 29
-#define BUZZER_PIN           28   // GP28/ADC2 = physical pin 34
+
+// ---- Buzzer / future relay ----
+#define BUZZER_PIN           13   // GP13 = physical pin 17
+//#define PIN_AC_RELAY         14   // CADANGAN nanti — GP14 = physical pin 19
 
 // ---- PID defaults ----
 #define PID_KP_T12           3.2f
