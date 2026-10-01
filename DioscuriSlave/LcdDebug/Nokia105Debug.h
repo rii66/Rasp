@@ -38,7 +38,7 @@
 #define NOKIA105_HEIGHT 160
 #endif
 #ifndef NOKIA105_X_OFFSET
-#define NOKIA105_X_OFFSET 2
+#define NOKIA105_X_OFFSET 0
 #endif
 #ifndef NOKIA105_Y_OFFSET
 #define NOKIA105_Y_OFFSET 0
