@@ -42,13 +42,12 @@ void Nokia105Debug::setRotation(uint8_t r) {
   uint8_t mad = 0x08;
   switch (rotationValue) {
     case 0: mad = 0x08; break;
-    case 1: mad = 0x68; break;
+    case 1: mad = 0xA8; break;   // test landscape
     case 2: mad = 0xC8; break;
-    case 3: mad = 0xA8; break;
+    case 3: mad = 0x28; break;
   }
-  writeNokiaCommand(NOKIA105_MADCTL);
+  writeNokiaCommand(0x36);
   writeNokiaData(mad);
-  backgroundColor(BLACK);
 }
 
 void Nokia105Debug::writeNokiaCommand(unsigned char Cmd) {
@@ -456,10 +455,10 @@ void Nokia105Debug:: printSingleChar(unsigned char c, unsigned char x, unsigned 
   for (uint8_t row = 0; row < 16; row++) {
     uint8_t bits = font8x16[c][row];
     for (uint8_t col = 0; col < 8; col++) {
-      uint16_t color = (bits & 0x01) ? fg : bg;
+      uint16_t color = (bits & 0x80) ? fg : bg;
       writeNokiaData(color >> 8);
       writeNokiaData(color);
-      bits >>= 1;
+      bits <<= 1;
     }
   }
 }
