@@ -6,14 +6,14 @@
 
 // 9-bit SPI is implemented in software for portability.
 // No MCU-specific GPIO registers and no ESP32 LEDC API are required.
-#define LCD_RES_High()   digitalWrite(SPIDEVICE_RES, HIGH)
-#define LCD_RES_Low()    digitalWrite(SPIDEVICE_RES, LOW)
-#define LCD_CS_High()    digitalWrite(SPIDEVICE_CS, HIGH)
-#define LCD_CS_Low()     digitalWrite(SPIDEVICE_CS, LOW)
-#define LCD_SDA_High()   digitalWrite(SPIDEVICE_SDA, HIGH)
-#define LCD_SDA_Low()    digitalWrite(SPIDEVICE_SDA, LOW)
-#define LCD_SCK_High()   digitalWrite(SPIDEVICE_SCK, HIGH)
-#define LCD_SCK_Low()    digitalWrite(SPIDEVICE_SCK, LOW)
+#define LCD_RES_High()   digitalWrite(this->SPIDEVICE_RES, HIGH)
+#define LCD_RES_Low()    digitalWrite(this->SPIDEVICE_RES, LOW)
+#define LCD_CS_High()    digitalWrite(this->SPIDEVICE_CS, HIGH)
+#define LCD_CS_Low()     digitalWrite(this->SPIDEVICE_CS, LOW)
+#define LCD_SDA_High()   digitalWrite(this->SPIDEVICE_SDA, HIGH)
+#define LCD_SDA_Low()    digitalWrite(this->SPIDEVICE_SDA, LOW)
+#define LCD_SCK_High()   digitalWrite(this->SPIDEVICE_SCK, HIGH)
+#define LCD_SCK_Low()    digitalWrite(this->SPIDEVICE_SCK, LOW)
 
 //https://stackoverflow.com/questions/2660484/what-are-0x01-and-0x80-representative-of-in-c-bitwise-operations
         /*| MSB |     |     |     |     |     |     | LSB |
