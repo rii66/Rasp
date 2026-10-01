@@ -1,6 +1,6 @@
 #include "Nokia105Debug.h"
 
-Nokia105Debug lcd(1, 0, 6, 3);
+Nokia105Debug lcd(1, 0, 6, 14);
 
 void setup() {
   pinMode(2, OUTPUT);
