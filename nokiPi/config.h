@@ -6,7 +6,7 @@
 #define LCD_SCK   0
 #define LCD_RST   6
 
-#define LCD1_CS   13
+#define LCD1_CS   12
 #define LCD2_CS   14
 
 // OLED
