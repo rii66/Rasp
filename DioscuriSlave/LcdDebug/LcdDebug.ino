@@ -14,15 +14,21 @@ static void mark(const char *s) {
 
 static void clockBit(uint8_t bit) {
   digitalWrite(LCD_SDA, bit ? HIGH : LOW);
+  delayMicroseconds(5);
   digitalWrite(LCD_SCK, HIGH);
+  delayMicroseconds(5);
   digitalWrite(LCD_SCK, LOW);
+  delayMicroseconds(5);
 }
 
 static void send9(uint8_t dc, uint8_t data) {
   digitalWrite(LCD_CS, LOW);
   digitalWrite(LCD_SDA, dc ? HIGH : LOW);
+  delayMicroseconds(5);
   digitalWrite(LCD_SCK, HIGH);
+  delayMicroseconds(5);
   digitalWrite(LCD_SCK, LOW);
+  delayMicroseconds(5);
 
   for (uint8_t mask = 0x80; mask; mask >>= 1) {
     clockBit(data & mask);
