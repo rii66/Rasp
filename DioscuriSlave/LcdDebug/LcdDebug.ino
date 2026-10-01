@@ -2,6 +2,9 @@
 
 Nokia105Debug lcd(1, 0, 6, 2);   // SDA, SCK, RST, CS
 
+int animX = 4;
+int animDir = 1;
+
 void setup() {
   Serial.begin(115200);
   delay(500);
@@ -15,4 +18,22 @@ void setup() {
   lcd.printString("STATUS OK",  4, 56, 0x07E0, 0x0000);
 }
 
-void loop() {}
+void loop() {
+  // Animasi teks bergerak kiri-kanan.
+  lcd.fillRectangle(0, 88, 160, 16, 0x0000);
+  lcd.printString("HERMENEX", animX, 88, 0xFFE0, 0x0000);
+
+  animX += animDir * 4;
+
+  if (animX <= 0) {
+    animX = 0;
+    animDir = 1;
+  }
+
+  if (animX >= 96) {
+    animX = 96;
+    animDir = -1;
+  }
+
+  delay(120);
+}
