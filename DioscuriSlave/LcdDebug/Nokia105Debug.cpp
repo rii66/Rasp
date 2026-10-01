@@ -2,7 +2,7 @@
 #include "fonts.h"
 #include "cmd.h"
 
-Nokia105Debug::Nokia105(int SDA, int SCLK, int RST, int CS)
+Nokia105Debug::Nokia105Debug(int SDA, int SCLK, int RST, int CS)
   : SPIDEVICE_CS(CS), SPIDEVICE_RES(RST), SPIDEVICE_SDA(SDA),
     SPIDEVICE_SCK(SCLK), backLightPin(-1), rotationValue(0) {}
 
