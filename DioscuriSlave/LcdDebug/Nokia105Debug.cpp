@@ -39,12 +39,12 @@ void Nokia105Debug::invertDisplay(bool invert) {
 
 void Nokia105Debug::setRotation(uint8_t r) {
   rotationValue = r & 3;
-  uint8_t mad = 0x08;
+  uint8_t mad;
   switch (rotationValue) {
-    case 0: mad = 0x08; break;
-    case 1: mad = 0xA8; break;   // test landscape
+    case 0: mad = 0x08; break;   // portrait
+    case 1: mad = 0xA8; break;   // landscape
     case 2: mad = 0xC8; break;
-    case 3: mad = 0x28; break;
+    case 3: mad = 0x68; break;
   }
   writeNokiaCommand(0x36);
   writeNokiaData(mad);
@@ -196,43 +196,20 @@ void Nokia105Debug::setDrawPosition(unsigned char x, unsigned char y) {
 }
 
 void Nokia105Debug::setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
-  uint8_t t0, t1;
-  switch (rotationValue) {
-    case 1: {
-      // 90 CW: logical 160x128 -> physical 128x160
-      uint8_t nx0 = HEIGHT - 1 - y1;
-      uint8_t nx1 = HEIGHT - 1 - y0;
-      uint8_t ny0 = x0;
-      uint8_t ny1 = x1;
-      x0 = nx0; x1 = nx1; y0 = ny0; y1 = ny1;
-      break;
-    }
-    case 2:
-      x0 = WIDTH - 1 - x0;
-      x1 = WIDTH - 1 - x1;
-      y0 = HEIGHT - 1 - y0;
-      y1 = HEIGHT - 1 - y1;
-      break;
-    case 3: {
-      // 270 CW: logical 160x128 -> physical 128x160
-      uint8_t nx0 = y0;
-      uint8_t nx1 = y1;
-      uint8_t ny0 = WIDTH - 1 - x1;
-      uint8_t ny1 = WIDTH - 1 - x0;
-      x0 = nx0; x1 = nx1; y0 = ny0; y1 = ny1;
-      break;
-    }
-    default: break;
-  }
-  writeNokiaCommand(NOKIA105_CASET);
-  writeNokiaData(0); writeNokiaData(x0 + NOKIA105_X_OFFSET);
-  writeNokiaData(0); writeNokiaData(x1 + NOKIA105_X_OFFSET);
-  writeNokiaCommand(NOKIA105_PASET);
-  writeNokiaData(0); writeNokiaData(y0 + NOKIA105_Y_OFFSET);
-  writeNokiaData(0); writeNokiaData(y1 + NOKIA105_Y_OFFSET);
-  writeNokiaCommand(NOKIA105_RAMWR);
-}
+  writeNokiaCommand(0x2A);          // CASET
+  writeNokiaData(0);
+  writeNokiaData(x0);
+  writeNokiaData(0);
+  writeNokiaData(x1);
 
+  writeNokiaCommand(0x2B);          // PASET
+  writeNokiaData(0);
+  writeNokiaData(y0);
+  writeNokiaData(0);
+  writeNokiaData(y1);
+
+  writeNokiaCommand(0x2C);          // RAMWR
+}
 void Nokia105Debug:: drawPixel(int16_t x, int16_t y, uint16_t color) {
 if ((x < 0) || (x >= WIDTH) || (y < 0) || (y >= HEIGHT))
     return;
