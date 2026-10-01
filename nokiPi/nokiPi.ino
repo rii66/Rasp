@@ -121,6 +121,6 @@ void setup() {
   lcd2.backgroundColor(0x0000);
   lcd2.printString("Cs2 Ok", 4, 30, 0xF81F, 0x0000);
   digitalWrite(LCD2_CS, HIGH); // Kunci mati Layar 2 setelah selesai
-
+}
   
 void loop() {}
