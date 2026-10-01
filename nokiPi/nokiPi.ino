@@ -1,22 +1,23 @@
+#include "config.h"
 #include "Nokia105Debug.h"
 
-Nokia105Debug lcd1(1, 0, 6, 2);
-Nokia105Debug lcd2(1, 0, 6, 3);
+Nokia105Debug lcd1(LCD_SDA, LCD_SCK, LCD_RST, LCD1_CS);
+Nokia105Debug lcd2(LCD_SDA, LCD_SCK, LCD_RST, LCD2_CS);
 
 void idleCS() {
-  digitalWrite(2, HIGH);
-  digitalWrite(3, HIGH);
+  digitalWrite(LCD1_CS, HIGH);
+  digitalWrite(LCD2_CS, HIGH);
 }
 
 void setup() {
-  pinMode(2, OUTPUT);
-  pinMode(3, OUTPUT);
+  pinMode(LCD1_CS, OUTPUT);
+  pinMode(LCD2_CS, OUTPUT);
   idleCS();
 
-  pinMode(6, OUTPUT);
-  digitalWrite(6, LOW);
+  pinMode(LCD_RST, OUTPUT);
+  digitalWrite(LCD_RST, LOW);
   delay(20);
-  digitalWrite(6, HIGH);
+  digitalWrite(LCD_RST, HIGH);
   delay(150);
 
   idleCS();
