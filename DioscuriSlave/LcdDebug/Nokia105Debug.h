@@ -32,10 +32,10 @@
 */
 //----------------------------macros to Manipulate display-----------------------------------
 #ifndef NOKIA105_WIDTH
-#define NOKIA105_WIDTH  128
+#define NOKIA105_WIDTH  160
 #endif
 #ifndef NOKIA105_HEIGHT
-#define NOKIA105_HEIGHT 160
+#define NOKIA105_HEIGHT 128
 #endif
 #ifndef NOKIA105_X_OFFSET
 #define NOKIA105_X_OFFSET 0
@@ -45,9 +45,9 @@
 #endif
 #define WIDTH          NOKIA105_WIDTH
 #define HEIGHT         NOKIA105_HEIGHT
-#define nextLineEdge   152             // logical width for rotation 1
+#define nextLineEdge   152             // logical width
 #define spaceBetweenScanLines  16      //printString, 2 lines ke beech ka distance
-#define fullLengthVertical    112      // logical height for rotation 1/3
+#define fullLengthVertical    112      // logical height
 #define rotation        0              //SCREEN ROTATION 0 by default
 #define rotateBitmap90  0              //1-> no rotaion 90,0-> yes rorate 90
 #define LOG             0              //to activate serial
