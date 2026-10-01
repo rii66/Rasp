@@ -1,5 +1,5 @@
-#include "../config.h"
-#include "../Nokia105_LCD.h"
+#include "config.h"
+#include "Nokia105_LCD.h"
 
 Nokia105 lcd(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS1);
 
@@ -11,13 +11,11 @@ void setup() {
   lcd.initDisplay();
   lcd.setRotation(1);
   lcd.backgroundColor(BLACK);
-
   Serial.println("LCD READY");
 }
 
 void loop() {
   static uint8_t step = 0;
-
   if (step == 0) {
     lcd.backgroundColor(RED);
     lcd.printString("RED  128x160", 8, 20, WHITE, RED);
@@ -35,7 +33,6 @@ void loop() {
     lcd.printString("BLACK TEST", 8, 20, WHITE, BLACK);
     Serial.println("BLACK");
   }
-
   step = (step + 1) & 3;
   delay(1000);
 }
