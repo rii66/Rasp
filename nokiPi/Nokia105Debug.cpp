@@ -95,11 +95,15 @@ void Nokia105Debug::displayClear(void) {
 }
 
 void Nokia105Debug::initDisplay(bool doReset) {
+  // CS wajib HIGH sebelum bus disentuh
   pinMode(SPIDEVICE_CS, OUTPUT);
+  digitalWrite(SPIDEVICE_CS, HIGH);
+
   pinMode(SPIDEVICE_RES, OUTPUT);
   pinMode(SPIDEVICE_SDA, OUTPUT);
   pinMode(SPIDEVICE_SCK, OUTPUT);
 
+  // Kondisi idle bus
   digitalWrite(SPIDEVICE_CS, HIGH);
   digitalWrite(SPIDEVICE_SCK, LOW);
   digitalWrite(SPIDEVICE_SDA, LOW);
@@ -108,6 +112,7 @@ void Nokia105Debug::initDisplay(bool doReset) {
     reset();
   }
 
+  // Inisialisasi hanya saat CS objek ini aktif
   writeNokiaCommand(0x01);   // SWRESET
   delay(150);
 
