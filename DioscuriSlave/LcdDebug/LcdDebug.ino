@@ -1,7 +1,7 @@
 #include "NokiaStation.h"
 
-NokiaStation solder(1, 0, 6, 2);
-NokiaStation hotAir(1, 0, 6, 3);
+NokiaStation solder(1, 0, 6, 3);
+NokiaStation hotAir(1, 0, 6, 2);
 
 static void lcdIdle() {
   digitalWrite(2, HIGH);
