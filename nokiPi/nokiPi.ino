@@ -87,23 +87,40 @@ void oledOK() {
 }
 
 void setup() {
-  Serial.begin(115200);
+  // 1. Matikan semua CS di awal agar tidak ada layar yang menguping data
+  pinMode(LCD1_CS, OUTPUT);
+  pinMode(LCD2_CS, OUTPUT);
+  digitalWrite(LCD1_CS, HIGH); 
+  digitalWrite(LCD2_CS, HIGH); 
+
+  // 2. Reset fisik LCD (berlaku untuk kedua layar karena RST diparalel)
+  pinMode(LCD_RST, OUTPUT);
+  digitalWrite(LCD_RST, LOW);
+  delay(20);
+  digitalWrite(LCD_RST, HIGH);
+  delay(150);
+
+  // 3. Init OLED kamu
+  oledInit();
+  oledOK();
+
+  // 4. SELESAIKAN LAYAR 1 SAMPAI TUNTAS
+  digitalWrite(LCD2_CS, HIGH); // Kunci mati Layar 2
+  lcd1.initDisplay(false);     // Init register internal Layar 1
+  lcd1.setRotation(1);
+  lcd1.backgroundColor(0x0000);
+  lcd1.printString("Cs1 Ok", 4, 30, 0x07FF, 0x0000);
+  digitalWrite(LCD1_CS, HIGH); // Kunci mati Layar 1 setelah selesai
+
+  delay(10); // Beri jeda napas untuk jalur SPI
+
+  // 5. SELESAIKAN LAYAR 2 SAMPAI TUNTAS
+  digitalWrite(LCD1_CS, HIGH); // Kunci mati Layar 1
+  lcd2.initDisplay(false);     // Init register internal Layar 2
+  lcd2.setRotation(1);
+  lcd2.backgroundColor(0x0000);
+  lcd2.printString("Cs2 Ok", 4, 30, 0xF81F, 0x0000);
+  digitalWrite(LCD2_CS, HIGH); // Kunci mati Layar 2 setelah selesai
+
   
-  // 2. NYALAKAN KEDUA LAYAR
-  lcd1.begin();
-  lcd2.begin();
-
-  // 3. UJI COBA INDEPENDEN (Kirim perintah berbeda ke masing-masing objek)
-  lcd1.displayClear();
-  lcd1.smpteTest(); // Layar 1 menampilkan kotak warna SMPTE
-
-  lcd2.displayClear();
-  lcd2.backgroundColor(BLACK); // Layar 2 dibersihkan jadi hitam
-  lcd2.printString("TES LAYAR 2", 10, 10, YELLOW, BLACK); // Layar 2 memunculkan teks kuning
-}
-
-void loop() {
-  // Test cok 
-  lcd1.printString("Aktif", 0, 0, WHITE, BLACK);
-  lcd2.printString("Aktif", 0, 0, GREEN, BLACK);
-}
+void loop() {}
