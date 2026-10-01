@@ -1,5 +1,5 @@
-#ifndef _NOKIA105_LCD_H
-#define _NOKIA105_LCD_H
+#ifndef _LCDDEBUG_NOKIA105_LCD_H
+#define _LCDDEBUG_NOKIA105_LCD_H
 
 #include "Arduino.h"
 #include "fonts.h"
