@@ -1,7 +1,7 @@
 #include "config.h"
-#include "Nokia105_LCD.h"
+#include "Nokia105Debug.h"
 
-Nokia105 lcd(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS1);
+Nokia105Debug lcd(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS1);
 
 void setup() {
   Serial.begin(115200);
