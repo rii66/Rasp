@@ -42,7 +42,7 @@ void Nokia105Debug::setRotation(uint8_t r) {
   uint8_t mad;
   switch (rotationValue) {
     case 0: mad = 0x08; break;   // portrait
-    case 1: mad = 0xE8; break;   // landscape + MX
+    case 1: mad = 0x28; break;   // landscape
     case 2: mad = 0xC8; break;
     case 3: mad = 0x68; break;
   }
