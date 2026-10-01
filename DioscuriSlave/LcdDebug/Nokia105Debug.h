@@ -45,9 +45,9 @@
 #endif
 #define WIDTH          NOKIA105_WIDTH
 #define HEIGHT         NOKIA105_HEIGHT
-#define nextLineEdge   128             //printString
+#define nextLineEdge   160             //printString
 #define spaceBetweenScanLines  16      //printString, 2 lines ke beech ka distance
-#define fullLengthVertical    160      //164 characters on display
+#define fullLengthVertical    128      //logical height at rotation 1/3
 #define rotation        0              //SCREEN ROTATION 0 by default
 #define rotateBitmap90  0              //1-> no rotaion 90,0-> yes rorate 90
 #define LOG             0              //to activate serial
