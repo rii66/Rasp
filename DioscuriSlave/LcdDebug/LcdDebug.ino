@@ -1,35 +1,41 @@
-#include <Arduino.h>
+#include "../config.h"
+#include "../Nokia105_LCD.h"
 
-#define LCD_SCK  0
-#define LCD_SDA  1
-#define LCD_CS   2
-#define LCD_RST  6
-#define LED_PIN  25
+Nokia105 lcd(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS1);
 
 void setup() {
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(LCD_SCK, OUTPUT);
-  pinMode(LCD_SDA, OUTPUT);
-  pinMode(LCD_CS, OUTPUT);
-  pinMode(LCD_RST, OUTPUT);
-
-  digitalWrite(LCD_SCK, HIGH);
-  digitalWrite(LCD_SDA, HIGH);
-  digitalWrite(LCD_CS, HIGH);
-  digitalWrite(LCD_RST, HIGH);
-
   Serial.begin(115200);
-  delay(2000);
+  delay(1000);
+  Serial.println("=== NOKIA SINGLE LCD TEST ===");
 
-  Serial.println("=== LCD GPIO ALL HIGH ===");
-  Serial.println("GP0 SCK = HIGH");
-  Serial.println("GP1 SDA = HIGH");
-  Serial.println("GP2 CS  = HIGH");
-  Serial.println("GP6 RST = HIGH");
-  Serial.println("Measure LCD pins: each should be about 3.3V.");
+  lcd.initDisplay();
+  lcd.setRotation(1);
+  lcd.backgroundColor(BLACK);
+
+  Serial.println("LCD READY");
 }
 
 void loop() {
-  digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+  static uint8_t step = 0;
+
+  if (step == 0) {
+    lcd.backgroundColor(RED);
+    lcd.printString("RED  128x160", 8, 20, WHITE, RED);
+    Serial.println("RED");
+  } else if (step == 1) {
+    lcd.backgroundColor(GREEN);
+    lcd.printString("GREEN", 8, 20, BLACK, GREEN);
+    Serial.println("GREEN");
+  } else if (step == 2) {
+    lcd.backgroundColor(BLUE);
+    lcd.printString("BLUE", 8, 20, WHITE, BLUE);
+    Serial.println("BLUE");
+  } else {
+    lcd.backgroundColor(BLACK);
+    lcd.printString("BLACK TEST", 8, 20, WHITE, BLACK);
+    Serial.println("BLACK");
+  }
+
+  step = (step + 1) & 3;
   delay(1000);
 }
