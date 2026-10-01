@@ -6,8 +6,8 @@
 #define LCD_SCK   0
 #define LCD_RST   6
 
-#define LCD1_CS   2
-#define LCD2_CS   14
+#define LCD1_CS   14
+#define LCD2_CS   15
 
 // OLED
 #define OLED_SDA  4
