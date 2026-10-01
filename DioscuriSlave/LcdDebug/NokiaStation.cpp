@@ -167,6 +167,10 @@ void NokiaStation::initDisplay(bool doReset) {
   backgroundColor(BLACK);
 }
 
+void NokiaStation::displayClear() {
+  backgroundColor(BLACK);
+}
+
 void NokiaStation::setDrawPosition(unsigned char x, unsigned char y) {
   setDrawPositionAxis(x, y, x + 7, y + 15);
 }
