@@ -446,25 +446,22 @@ while (w--) {
 }
 }
 
-void Nokia105Debug:: printSingleChar ( unsigned char c,unsigned char x,unsigned char y,uint16_t forgroundColor,uint16_t backgroundColor) {
-unsigned char k,Mline,Ctemp;
-setDrawPosition(x,y);
-c -= 0x20;
+void Nokia105Debug:: printSingleChar(unsigned char c, unsigned char x, unsigned char y,
+                                        uint16_t fg, uint16_t bg) {
+  if (c < 0x20) c = 0x20;
+  c -= 0x20;
 
-for (Mline = 0; Mline < 16; Mline++) {
-  Ctemp = font8x16[c][Mline];
-  for(k = 0; k < 8; k++) {
-    if(Ctemp & 0x01) {
-      writeNokiaData(forgroundColor>>8);
-      writeNokiaData(forgroundColor);
-    } else {
-      writeNokiaData(backgroundColor>>8);
-      writeNokiaData(backgroundColor);
+  setDrawPositionAxis(x, y, x + 7, y + 15);
+
+  for (uint8_t row = 0; row < 16; row++) {
+    uint8_t bits = font8x16[c][row];
+    for (uint8_t col = 0; col < 8; col++) {
+      uint16_t color = (bits & 0x01) ? fg : bg;
+      writeNokiaData(color >> 8);
+      writeNokiaData(color);
+      bits >>= 1;
     }
-    Ctemp=Ctemp>>1;
   }
-  setDrawPosition(x,++y);
-}
 }
 
 void Nokia105Debug:: printStringChar(const char *String,unsigned char x,unsigned char y,uint16_t forgroundColor,uint16_t backgroundColor) {
