@@ -1,46 +1,15 @@
-#include "NokiaStation.h"
+#include "Nokia105Debug.h"
 
-NokiaStation solder(1, 0, 6, 3);
-NokiaStation hotAir(1, 0, 6, 2);
-
-static void lcdIdle() {
-  digitalWrite(2, HIGH);
-  digitalWrite(3, HIGH);
-}
+Nokia105Debug lcd(1, 0, 6, 3);  // SDA SCK RST CS=GP3
 
 void setup() {
-  Serial.begin(115200);
-  delay(500);
-
   pinMode(2, OUTPUT);
-  pinMode(3, OUTPUT);
-  pinMode(0, OUTPUT);
-  pinMode(1, OUTPUT);
-  pinMode(6, OUTPUT);
+  digitalWrite(2, HIGH);
 
-  lcdIdle();
-
-  digitalWrite(6, LOW);
-  delay(20);
-  digitalWrite(6, HIGH);
-  delay(150);
-
-  lcdIdle();
-
-  solder.initDisplay(false);
-  solder.setRotation(1);
-  solder.backgroundColor(BLACK);
-  solder.printString("SOLDER", 4, 20, CYAN, BLACK);
-
-  lcdIdle();
-  delay(50);
-
-  hotAir.initDisplay(false);
-  hotAir.setRotation(1);
-  hotAir.backgroundColor(BLACK);
-  hotAir.printString("HOT AIR", 4, 20, MAGENTA, BLACK);
-
-  lcdIdle();
+  lcd.initDisplay(true);
+  lcd.setRotation(1);
+  lcd.backgroundColor(0x0000);
+  lcd.printString("CS3 OK", 4, 40, 0xFFFF, 0x0000);
 }
 
 void loop() {}
