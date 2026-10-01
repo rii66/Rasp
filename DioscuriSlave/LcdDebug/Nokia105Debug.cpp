@@ -432,10 +432,10 @@ void Nokia105Debug:: printSingleChar(unsigned char c, unsigned char x, unsigned 
   for (uint8_t row = 0; row < 16; row++) {
     uint8_t bits = font8x16[c][row];
     for (uint8_t col = 0; col < 8; col++) {
-      uint16_t color = (bits & 0x80) ? fg : bg;
+      uint16_t color = (bits & 0x01) ? fg : bg;
       writeNokiaData(color >> 8);
       writeNokiaData(color);
-      bits <<= 1;
+      bits >>= 1;
     }
   }
 }
