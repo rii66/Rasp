@@ -199,15 +199,30 @@ void Nokia105Debug::setDrawPosition(unsigned char x, unsigned char y) {
 void Nokia105Debug::setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
   uint8_t t0, t1;
   switch (rotationValue) {
-    case 1:
-      t0 = WIDTH - 1 - y1; t1 = WIDTH - 1 - y0;
-      y0 = x0; x0 = t0; y1 = x1; x1 = t1; break;
+    case 1: {
+      // 90 CW: logical 160x128 -> physical 128x160
+      uint8_t nx0 = HEIGHT - 1 - y1;
+      uint8_t nx1 = HEIGHT - 1 - y0;
+      uint8_t ny0 = x0;
+      uint8_t ny1 = x1;
+      x0 = nx0; x1 = nx1; y0 = ny0; y1 = ny1;
+      break;
+    }
     case 2:
-      t0 = x0; x0 = WIDTH - 1 - x1; x1 = WIDTH - 1 - t0;
-      t0 = y0; y0 = HEIGHT - 1 - y1; y1 = HEIGHT - 1 - t0; break;
-    case 3:
-      t0 = HEIGHT - 1 - x1; t1 = HEIGHT - 1 - x0;
-      x0 = y0; y0 = t0; x1 = y1; y1 = t1; break;
+      x0 = WIDTH - 1 - x0;
+      x1 = WIDTH - 1 - x1;
+      y0 = HEIGHT - 1 - y0;
+      y1 = HEIGHT - 1 - y1;
+      break;
+    case 3: {
+      // 270 CW: logical 160x128 -> physical 128x160
+      uint8_t nx0 = y0;
+      uint8_t nx1 = y1;
+      uint8_t ny0 = WIDTH - 1 - x1;
+      uint8_t ny1 = WIDTH - 1 - x0;
+      x0 = nx0; x1 = nx1; y0 = ny0; y1 = ny1;
+      break;
+    }
     default: break;
   }
   writeNokiaCommand(NOKIA105_CASET);
