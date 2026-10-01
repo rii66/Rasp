@@ -48,7 +48,6 @@ void Nokia105::setRotation(uint8_t r) {
   }
   writeNokiaCommand(NOKIA105_MADCTL);
   writeNokiaData(mad);
-  backgroundColor(BLACK);
 }
 
 void Nokia105::writeNokiaCommand(unsigned char Cmd) {
@@ -59,11 +58,8 @@ void Nokia105::writeNokiaCommand(unsigned char Cmd) {
   LCD_SCK_Low();
   for (uint8_t mask = 0x80; mask; mask >>= 1) {
     digitalWrite(SPIDEVICE_SDA, (Cmd & mask) ? HIGH : LOW);
-    delayMicroseconds(1);
     LCD_SCK_High();
-    delayMicroseconds(1);
     LCD_SCK_Low();
-    delayMicroseconds(1);
   }
   LCD_CS_High();
 }
@@ -76,11 +72,8 @@ void Nokia105::writeNokiaData(unsigned char Data) {
   LCD_SCK_Low();
   for (uint8_t mask = 0x80; mask; mask >>= 1) {
     digitalWrite(SPIDEVICE_SDA, (Data & mask) ? HIGH : LOW);
-    delayMicroseconds(1);
     LCD_SCK_High();
-    delayMicroseconds(1);
     LCD_SCK_Low();
-    delayMicroseconds(1);
   }
   LCD_CS_High();
 }
@@ -117,8 +110,6 @@ void Nokia105::initDisplay(bool doReset) {
   writeNokiaData(0x05);
 
   setRotation(0);
-  backgroundColor(BLACK);
-
   writeNokiaCommand(NOKIA105_NORON);
   delay(10);
 
