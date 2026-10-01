@@ -105,28 +105,90 @@ void Nokia105Debug::initDisplay(bool doReset) {
   digitalWrite(SPIDEVICE_SCK, LOW);
   digitalWrite(SPIDEVICE_SDA, LOW);
 
-  if (doReset) reset();
+  if (doReset) {
+    reset();
+  }
 
-  // Exact tested ESP32-C3 TesLcd sequence.
-  writeNokiaCommand(NOKIA105_SWRESET);
-  delay(120);
+  writeNokiaCommand(0x01);   // SWRESET
+  delay(150);
 
-  writeNokiaCommand(NOKIA105_SPLOUT);
-  delay(120);
+  writeNokiaCommand(0x11);   // Sleep Out
+  delay(150);
 
-  writeNokiaCommand(NOKIA105_COLMOD);
+  // Extended command
+  writeNokiaCommand(0xC1);
+  writeNokiaData(0xFF);
+  writeNokiaData(0x83);
+  writeNokiaData(0x40);
+
+  writeNokiaCommand(0xCA);
+  writeNokiaData(0x70);
+  writeNokiaData(0x00);
+  writeNokiaData(0xD9);
+
+  writeNokiaCommand(0xB0);
+  writeNokiaData(0x01);
+  writeNokiaData(0x11);
+
+  // Drive ability
+  writeNokiaCommand(0xC9);
+  writeNokiaData(0x90);
+  writeNokiaData(0x49);
+  writeNokiaData(0x10);
+  writeNokiaData(0x28);
+  writeNokiaData(0x28);
+  writeNokiaData(0x10);
+  writeNokiaData(0x00);
+  writeNokiaData(0x06);
+  delay(20);
+
+  // Gamma
+  writeNokiaCommand(0xC2);   // SETGAMMAP
+  writeNokiaData(0x60);
+  writeNokiaData(0x71);
+  writeNokiaData(0x01);
+  writeNokiaData(0x0E);
   writeNokiaData(0x05);
+  writeNokiaData(0x02);
+  writeNokiaData(0x09);
+  writeNokiaData(0x31);
+  writeNokiaData(0x0A);
+
+  writeNokiaCommand(0xC3);   // SETGAMMAN
+  writeNokiaData(0x67);
+  writeNokiaData(0x30);
+  writeNokiaData(0x61);
+  writeNokiaData(0x17);
+  writeNokiaData(0x48);
+  writeNokiaData(0x07);
+  writeNokiaData(0x05);
+  writeNokiaData(0x33);
+  delay(10);
+
+  // Power
+  writeNokiaCommand(0xB5);
+  writeNokiaData(0x35);
+  writeNokiaData(0x20);
+  writeNokiaData(0x45);
+
+  writeNokiaCommand(0xB4);
+  writeNokiaData(0x33);
+  writeNokiaData(0x25);
+  writeNokiaData(0x4C);
+  delay(10);
+
+  writeNokiaCommand(0x3A);   // COLMOD
+  writeNokiaData(0x05);      // 16-bit
 
   setRotation(0);
-  backgroundColor(BLACK);
 
-  writeNokiaCommand(NOKIA105_NORON);
+  writeNokiaCommand(0x13);   // NORON
   delay(10);
 
-  displayOn();
-  delay(10);
+  writeNokiaCommand(0x29);   // DISPON
+  delay(20);
 
-  displayClear();
+  backgroundColor(BLACK);    // paksa isi layar
 }
 
 
