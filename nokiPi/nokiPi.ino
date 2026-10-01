@@ -87,39 +87,54 @@ void oledOK() {
 }
 
 void setup() {
-  // 1. Matikan semua CS di awal agar tidak ada layar yang menguping data
+  // 1. Matikan semua CS di awal
   pinMode(LCD1_CS, OUTPUT);
   pinMode(LCD2_CS, OUTPUT);
   digitalWrite(LCD1_CS, HIGH); 
   digitalWrite(LCD2_CS, HIGH); 
-
-  // 2. Reset fisik LCD (berlaku untuk kedua layar karena RST diparalel)
   pinMode(LCD_RST, OUTPUT);
+
+  // 2. Init OLED kamu dulu sampai selesai
+  oledInit();
+  oledOK();
+
+  // ==========================================
+  // 3. INSIALISASI LAYAR 1 (Kanan/Kiri yang terhubung ke CS1)
+  // ==========================================
+  digitalWrite(LCD2_CS, HIGH); // Layar 2 wajib mati total
+  digitalWrite(LCD1_CS, LOW);  // Aktifkan Layar 1
+
+  // Reset fisik khusus untuk Layar 1 saat dia aktif
   digitalWrite(LCD_RST, LOW);
   delay(20);
   digitalWrite(LCD_RST, HIGH);
   delay(150);
 
-  // 3. Init OLED kamu
-  oledInit();
-  oledOK();
-
-  // 4. SELESAIKAN LAYAR 1 SAMPAI TUNTAS
-  digitalWrite(LCD2_CS, HIGH); // Kunci mati Layar 2
-  lcd1.initDisplay(false);     // Init register internal Layar 1
+  lcd1.initDisplay(false); // Jalankan init register
   lcd1.setRotation(1);
   lcd1.backgroundColor(0x0000);
   lcd1.printString("Cs1 Ok", 4, 30, 0x07FF, 0x0000);
+  
   digitalWrite(LCD1_CS, HIGH); // Kunci mati Layar 1 setelah selesai
+  delay(50); // Jeda napas SPI
 
-  delay(10); // Beri jeda napas untuk jalur SPI
+  // ==========================================
+  // 4. INISIALISASI LAYAR 2 (Layar yang blank putih)
+  // ==========================================
+  digitalWrite(LCD1_CS, HIGH); // Layar 1 wajib mati total
+  digitalWrite(LCD2_CS, LOW);  // Aktifkan Layar 2
 
-  // 5. SELESAIKAN LAYAR 2 SAMPAI TUNTAS
-  digitalWrite(LCD1_CS, HIGH); // Kunci mati Layar 1
-  lcd2.initDisplay(false);     // Init register internal Layar 2
+  // Reset fisik ulang khusus untuk Layar 2 sebelum dia di-init
+  digitalWrite(LCD_RST, LOW);
+  delay(20);
+  digitalWrite(LCD_RST, HIGH);
+  delay(150);
+
+  lcd2.initDisplay(false); // Jalankan init register
   lcd2.setRotation(1);
   lcd2.backgroundColor(0x0000);
   lcd2.printString("Cs2 Ok", 4, 30, 0xF81F, 0x0000);
+  
   digitalWrite(LCD2_CS, HIGH); // Kunci mati Layar 2 setelah selesai
 }
   
