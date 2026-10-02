@@ -20,8 +20,8 @@
 // ---- Nokia LCD (shared SPI) ----
 #define PIN_LCD_SCK           0   // GP0  = physical pin 1
 #define PIN_LCD_SDA           1   // GP1  = physical pin 2
-#define PIN_LCD_CS1           2   // GP2  = physical pin 4
-#define PIN_LCD_CS2           3   // GP3  = physical pin 5
+#define PIN_LCD_CS1           12   // GP2  = physical pin 4
+#define PIN_LCD_CS2           14   //  physical pin 19
 #define PIN_LCD_RESET         6   // GP6  = physical pin 9
 
 // ---- OLED I2C ----
@@ -35,7 +35,7 @@
 
 #define PIN_ENC2_A           10   // GP10 = physical pin 14
 #define PIN_ENC2_B           11   // GP11 = physical pin 15
-#define PIN_ENC2_SW          12   // GP12 = physical pin 16
+#define PIN_ENC2_SW          3   //  physical pin 5
 
 // ---- Analog / sleep ----
 #define PIN_POT_FAN          28   // GP28/ADC2 = physical pin 34
@@ -53,7 +53,7 @@
 
 // ---- Buzzer / future relay ----
 #define BUZZER_PIN           13   // GP13 = physical pin 17
-//#define PIN_AC_RELAY         14   // CADANGAN nanti — GP14 = physical pin 19
+//#define PIN_AC_RELAY         2   
 
 // ---- PID defaults ----
 #define PID_KP_T12           3.2f
