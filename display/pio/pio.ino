@@ -1,136 +1,75 @@
 // ============================================================
-// Nokia 105 PIO Dual + OLED SSD1306 Debug
-// LCD1 CS=GP2  LCD2 CS=GP3  RST=GP6  SDA=GP1  SCK=GP0
-// OLED SDA=GP4  SCL=GP5
+// Nokia 105 LCD - PIO Dual Debug v3
+// Fix CS timing + re-init LCD1 + slower clock
 // ============================================================
 
 #include "Nokia105_LCD.h"
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 
-#define LCD_SDA 1
-#define LCD_SCK 0
-#define LCD_RST 6
-#define LCD1_CS 2
-#define LCD2_CS 3
+// ====== SHARED BUS ======
+#define LCD_SDA   1
+#define LCD_SCK   0
+#define LCD_RST   6
 
-#define PIN_OLED_SDA 4
-#define PIN_OLED_SCL 5
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_ADDR 0x3C
+// ====== CS per display ======
+#define LCD1_CS   2
+#define LCD2_CS   3
 
 Nokia105 display1(LCD_SDA, LCD_SCK, LCD_RST, LCD1_CS);
 Nokia105 display2(LCD_SDA, LCD_SCK, LCD_RST, LCD2_CS);
-Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 const uint16_t colors[] = {
   BLACK, NAVY, DARKGREEN, MAROON, PURPLE,
   BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE, ORANGE
 };
-
 const char* colorNames[] = {
   "BLACK", "NAVY", "DKGREEN", "MAROON", "PURPLE",
   "BLUE", "GREEN", "CYAN", "RED", "MAGENTA", "YELLOW", "WHITE", "ORANGE"
 };
-
-const int NUM_COLORS = sizeof(colors) / sizeof(colors[0]);
-bool oled_ok = false;
+const int NUM_COLORS = 13;
 
 void forceAllCS_High() {
   pinMode(LCD1_CS, OUTPUT);
   pinMode(LCD2_CS, OUTPUT);
   digitalWrite(LCD1_CS, HIGH);
   digitalWrite(LCD2_CS, HIGH);
-  delayMicroseconds(20);
+  delayMicroseconds(50);
 }
 
 void setup() {
   Serial.begin(115200);
   delay(500);
-
-  Serial.println("=== Dual Nokia + OLED Debug ===");
-  Serial.println("LCD SDA=GP1 SCK=GP0 RST=GP6 CS1=GP2 CS2=GP3");
-  Serial.println("OLED SDA=GP4 SCL=GP5");
+  Serial.println("=== Nokia 105 PIO Dual Debug v3 ===");
+  Serial.println("CS1=GP12  CS2=GP14  RST=GP6  SDA=1  SCK=0");
 
   forceAllCS_High();
 
-  Wire.setSDA(PIN_OLED_SDA);
-  Wire.setSCL(PIN_OLED_SCL);
-  Wire.begin();
-  delay(10);
-
-  if (oled.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
-    oled_ok = true;
-    oled.clearDisplay();
-    oled.setTextSize(1);
-    oled.setTextColor(SSD1306_WHITE);
-    oled.setCursor(0, 0);
-    oled.println("OLED OK");
-    oled.println("SDA=GP4 SCL=GP5");
-    oled.println("Init Nokia...");
-    oled.display();
-    Serial.println("OLED init OK @ 0x3C");
-  } else if (oled.begin(SSD1306_SWITCHCAPVCC, 0x3D)) {
-    oled_ok = true;
-    oled.clearDisplay();
-    oled.setCursor(0, 0);
-    oled.println("OLED OK");
-    oled.println("SDA=GP4 SCL=GP5");
-    oled.println("ADDR=0x3D");
-    oled.display();
-    Serial.println("OLED init OK @ 0x3D");
-  } else {
-    Serial.println("OLED FAIL: 0x3C / 0x3D");
-  }
-
-  Serial.println("Init LCD1...");
-  forceAllCS_High();
+  Serial.println("Init display1...");
   display1.begin(20000000);
   forceAllCS_High();
   delay(50);
 
-  Serial.println("Init LCD2...");
-  forceAllCS_High();
+  Serial.println("Init display2...");
   display2.begin(20000000);
   forceAllCS_High();
   delay(50);
 
-  // begin() sudah menjalankan initDisplaySoft().
-  // Tidak perlu init LCD1 lagi.
-
+  // Re-init LCD1 setelah LCD2
+  Serial.println("Re-init display1 after display2...");
+  display1.initDisplaySoft();
   forceAllCS_High();
+  delay(50);
+
+  // Test solid
+  Serial.println("Solid color test...");
   display1.backgroundColor(RED);
-  forceAllCS_High();
   display2.backgroundColor(BLUE);
-  forceAllCS_High();
-
-  if (oled_ok) {
-    oled.clearDisplay();
-    oled.setCursor(0, 0);
-    oled.println("LCD1=RED");
-    oled.println("LCD2=BLUE");
-    oled.display();
-  }
   delay(800);
 
-  forceAllCS_High();
   display1.backgroundColor(GREEN);
-  forceAllCS_High();
   display2.backgroundColor(YELLOW);
-  forceAllCS_High();
-
-  if (oled_ok) {
-    oled.clearDisplay();
-    oled.setCursor(0, 0);
-    oled.println("LCD1=GREEN");
-    oled.println("LCD2=YELLOW");
-    oled.display();
-  }
   delay(800);
 
-  Serial.println("Cycle start...");
+  Serial.println("Starting cycle...");
 }
 
 void loop() {
@@ -143,45 +82,33 @@ void loop() {
 
   forceAllCS_High();
 
+  // ---- LCD 1 ----
   uint16_t bg1 = colors[idx1];
   uint16_t fg1 = (bg1 == WHITE || bg1 == YELLOW || bg1 == CYAN || bg1 == GREEN) ? BLACK : WHITE;
 
   display1.backgroundColor(bg1);
   display1.printString("LCD #1", 35, 15, fg1, bg1);
-  display1.printString("CS GP2", 30, 40, fg1, bg1);
+  display1.printString("CS GP12", 28, 40, fg1, bg1);
   display1.printString(colorNames[idx1], 20, 65, fg1, bg1);
   display1.printDigit(idx1 + 1, 55, 100, fg1, bg1);
 
   forceAllCS_High();
 
+  // ---- LCD 2 ----
   uint16_t bg2 = colors[idx2];
   uint16_t fg2 = (bg2 == WHITE || bg2 == YELLOW || bg2 == CYAN || bg2 == GREEN) ? BLACK : WHITE;
 
   display2.backgroundColor(bg2);
   display2.printString("LCD #2", 35, 15, fg2, bg2);
-  display2.printString("CS GP3", 30, 40, fg2, bg2);
+  display2.printString("CS GP14", 28, 40, fg2, bg2);
   display2.printString(colorNames[idx2], 20, 65, fg2, bg2);
   display2.printDigit(idx2 + 1, 55, 100, fg2, bg2);
 
   forceAllCS_High();
 
-  if (oled_ok) {
-    oled.clearDisplay();
-    oled.setCursor(0, 0);
-    oled.setTextSize(1);
-    oled.setTextColor(SSD1306_WHITE);
-    oled.println("Dual Nokia + OLED");
-    oled.print("LCD1: ");
-    oled.println(colorNames[idx1]);
-    oled.print("LCD2: ");
-    oled.println(colorNames[idx2]);
-    oled.print("t=");
-    oled.print(millis() / 1000);
-    oled.println("s");
-    oled.display();
-  }
-
-  Serial.print("LCD1=");
+  Serial.print("t=");
+  Serial.print(millis() / 1000);
+  Serial.print("s  LCD1=");
   Serial.print(colorNames[idx1]);
   Serial.print("  LCD2=");
   Serial.println(colorNames[idx2]);
