@@ -3,20 +3,12 @@
 #include <string.h>
 
 // ============================================================
-// PIO 9-bit SPI TX (3-wire)
-// Program:
-//   .side_set 1
-//   .wrap_target
-//     out pins, 1   side 0     ; data bit + clock low
-//     nop           side 1     ; clock high
-//   .wrap
-// Autopull 9 bits, MSB first (shift left)
+// PIO 9-bit SPI TX (3-wire) - FIXED shared RST + CS timing
 // ============================================================
 
-// Hardcoded PIO instructions (side_set 1)
 static const uint16_t spi9_program_instructions[] = {
-    0x6001, // 011 00000 000 00001   out pins, 1   side 0
-    0xb042, // 101 10000 100 00010   nop           side 1
+    0x6001, // out pins, 1   side 0
+    0xb042, // nop           side 1
 };
 
 static const struct pio_program spi9_program = {
@@ -25,7 +17,6 @@ static const struct pio_program spi9_program = {
     .origin = -1,
 };
 
-// static shared state
 bool  Nokia105::_pio_ok   = false;
 PIO   Nokia105::_pio      = nullptr;
 uint  Nokia105::_sm       = 0;
@@ -36,62 +27,60 @@ int   Nokia105::_bus_sck  = -1;
 Nokia105::Nokia105(int sda, int sck, int rst, int cs)
   : _rst(rst), _cs(cs), _rotation(0)
 {
-  // first instance records the bus pins
   if (_bus_sda < 0) {
     _bus_sda = sda;
     _bus_sck = sck;
   }
 }
 
-// ---------- low level ----------
 void Nokia105::csLow()  { gpio_put(_cs, 0); }
 void Nokia105::csHigh() { gpio_put(_cs, 1); }
 
 void Nokia105::pioPut(uint16_t val9) {
-  // wait until TX FIFO has space
   while (pio_sm_is_tx_fifo_full(_pio, _sm))
     tight_loop_contents();
-  // write 32-bit, left-justify for shift-left (9 bits)
   pio_sm_put(_pio, _sm, (uint32_t)val9 << 23);
 }
 
 void Nokia105::writeCmd(uint8_t cmd) {
   csLow();
-  pioPut(cmd);                 // DC = 0
+  busy_wait_us(1);
+  pioPut(cmd);
   while (!pio_sm_is_tx_fifo_empty(_pio, _sm))
     tight_loop_contents();
-  busy_wait_us(1);
+  busy_wait_us(3);
   csHigh();
 }
 
 void Nokia105::writeData(uint8_t data) {
   csLow();
-  pioPut(0x100 | data);        // DC = 1
+  busy_wait_us(1);
+  pioPut(0x100 | data);
   while (!pio_sm_is_tx_fifo_empty(_pio, _sm))
     tight_loop_contents();
-  busy_wait_us(1);
+  busy_wait_us(3);
   csHigh();
 }
 
 void Nokia105::writeData16(uint16_t color) {
   csLow();
+  busy_wait_us(1);
   pioPut(0x100 | (color >> 8));
   pioPut(0x100 | (color & 0xFF));
   while (!pio_sm_is_tx_fifo_empty(_pio, _sm))
     tight_loop_contents();
-  busy_wait_us(1);
+  busy_wait_us(3);
   csHigh();
 }
 
-// ---------- PIO init (called once) ----------
 void Nokia105::begin(uint32_t freq_hz) {
+  static bool rst_done = false;
+
   if (!_pio_ok) {
-    // Use PIO0, claim free SM
     _pio = pio0;
     _sm = pio_claim_unused_sm(_pio, true);
     _offset = pio_add_program(_pio, &spi9_program);
 
-    // GPIO init
     pio_gpio_init(_pio, _bus_sda);
     pio_gpio_init(_pio, _bus_sck);
     pio_sm_set_consecutive_pindirs(_pio, _sm, _bus_sda, 1, true);
@@ -99,27 +88,21 @@ void Nokia105::begin(uint32_t freq_hz) {
 
     pio_sm_config c = pio_get_default_sm_config();
     sm_config_set_wrap(&c, _offset + 0, _offset + 1);
-    sm_config_set_sideset(&c, 1, false, false);   // 1-bit side-set
-
+    sm_config_set_sideset(&c, 1, false, false);
     sm_config_set_out_pins(&c, _bus_sda, 1);
     sm_config_set_sideset_pins(&c, _bus_sck);
-
-    // MSB first (shift left), autopull every 9 bits
     sm_config_set_out_shift(&c, false, true, 9);
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
 
-    // 2 PIO cycles per bit
     float div = (float)clock_get_hz(clk_sys) / (freq_hz * 2.0f);
     if (div < 1.0f) div = 1.0f;
     sm_config_set_clkdiv(&c, div);
 
     pio_sm_init(_pio, _sm, _offset, &c);
     pio_sm_set_enabled(_pio, _sm, true);
-
     _pio_ok = true;
   }
 
-  // per-display pins
   gpio_init(_cs);
   gpio_set_dir(_cs, GPIO_OUT);
   gpio_put(_cs, 1);
@@ -128,7 +111,13 @@ void Nokia105::begin(uint32_t freq_hz) {
   gpio_set_dir(_rst, GPIO_OUT);
   gpio_put(_rst, 1);
 
-  initDisplay();
+  // Hardware reset ONLY once (shared RST)
+  if (!rst_done) {
+    reset();
+    rst_done = true;
+  }
+
+  initDisplaySoft();
 }
 
 void Nokia105::reset() {
@@ -160,7 +149,10 @@ void Nokia105::setRotation(uint8_t r) {
 
 void Nokia105::initDisplay() {
   reset();
+  initDisplaySoft();
+}
 
+void Nokia105::initDisplaySoft() {
   writeCmd(NOKIA105_SWRESET);
   delay(120);
   writeCmd(NOKIA105_SPLOUT);
@@ -175,7 +167,6 @@ void Nokia105::initDisplay() {
   displayClear();
 }
 
-// ---------- drawing ----------
 void Nokia105::setDrawPosition(unsigned char x, unsigned char y) {
   setDrawPositionAxis(x, y, x + 7, y + 15);
 }
@@ -232,8 +223,8 @@ void Nokia105::fillRectangle(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
 
   setDrawPositionAxis(x, y, x + w - 1, y + h - 1);
 
-  // CS low for whole block
   csLow();
+  busy_wait_us(1);
   uint16_t hi = 0x100 | (color >> 8);
   uint16_t lo = 0x100 | (color & 0xFF);
   int32_t count = (int32_t)w * h;
@@ -243,7 +234,7 @@ void Nokia105::fillRectangle(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
   }
   while (!pio_sm_is_tx_fifo_empty(_pio, _sm))
     tight_loop_contents();
-  busy_wait_us(2);
+  busy_wait_us(5);
   csHigh();
 }
 
@@ -251,6 +242,7 @@ void Nokia105::backgroundColor(uint16_t c) {
   setDrawPositionAxis(0, 0, WIDTH - 1, HEIGHT - 1);
 
   csLow();
+  busy_wait_us(1);
   uint16_t hi = 0x100 | (c >> 8);
   uint16_t lo = 0x100 | (c & 0xFF);
   uint32_t n = (uint32_t)WIDTH * HEIGHT;
@@ -260,7 +252,7 @@ void Nokia105::backgroundColor(uint16_t c) {
   }
   while (!pio_sm_is_tx_fifo_empty(_pio, _sm))
     tight_loop_contents();
-  busy_wait_us(2);
+  busy_wait_us(5);
   csHigh();
 }
 
@@ -277,6 +269,7 @@ void Nokia105::lineHorizontal(int16_t x, int16_t y, int16_t w, uint16_t color) {
 
   setDrawPositionAxis(x, y, x + w - 1, y);
   csLow();
+  busy_wait_us(1);
   uint16_t hi = 0x100 | (color >> 8);
   uint16_t lo = 0x100 | (color & 0xFF);
   while (w--) {
@@ -285,7 +278,7 @@ void Nokia105::lineHorizontal(int16_t x, int16_t y, int16_t w, uint16_t color) {
   }
   while (!pio_sm_is_tx_fifo_empty(_pio, _sm))
     tight_loop_contents();
-  busy_wait_us(1);
+  busy_wait_us(3);
   csHigh();
 }
 
@@ -298,6 +291,7 @@ void Nokia105::lineVertical(int16_t x, int16_t y, int16_t h, uint16_t color) {
 
   setDrawPositionAxis(x, y, x, y + h - 1);
   csLow();
+  busy_wait_us(1);
   uint16_t hi = 0x100 | (color >> 8);
   uint16_t lo = 0x100 | (color & 0xFF);
   while (h--) {
@@ -306,7 +300,7 @@ void Nokia105::lineVertical(int16_t x, int16_t y, int16_t h, uint16_t color) {
   }
   while (!pio_sm_is_tx_fifo_empty(_pio, _sm))
     tight_loop_contents();
-  busy_wait_us(1);
+  busy_wait_us(3);
   csHigh();
 }
 
