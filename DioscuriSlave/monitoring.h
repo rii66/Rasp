@@ -2,85 +2,141 @@
 #define MONITORING_H
 
 #include <Arduino.h>
+#include <string.h>
 #include "config.h"
 #include "GlobalState.h"
+#include "handler.h"
 
-extern uint16_t airGetTemp();
-extern uint16_t airGetTargetTemp();
-extern uint8_t airGetPower();
-extern uint8_t airGetFan();
-extern bool airIsOn();
-extern bool airHasAC();
-extern const char* airGetModeStr();
+inline void monitorBoot(const __FlashStringHelper* label) {
+    Serial.print(F("[BOOT] "));
+    Serial.print(label);
+    Serial.println(F(" ✓"));
+}
 
-inline void monitorStations() {
+inline void monitorInput(int ec1Delta, int ec2Delta) {
+    if (ec1Delta != 0) {
+        Serial.print(F("[INPUT] EC1 "));
+        if (ec1Delta > 0) Serial.print('+');
+        Serial.println(ec1Delta);
+    }
 
-    static unsigned long lastPrint = 0;
+    if (ec2Delta != 0) {
+        Serial.print(F("[INPUT] EC2 "));
+        if (ec2Delta > 0) Serial.print('+');
+        Serial.println(ec2Delta);
+    }
+}
 
-    if (millis() - lastPrint < 500)
+inline void monitorRuntime() {
+    static bool first = true;
+    static StationMode lastStation = STATION_MODE_SOLDER;
+    static bool lastAirOn = false;
+    static bool lastAirAc = false;
+    static bool lastAirFan = false;
+    static int lastAirPower = -1;
+    static const char* lastAirMode = nullptr;
+    static bool lastSleeping = false;
+    static bool lastBoost = false;
+    static int lastPotBucket = -1;
+    static bool lastTipError = false;
+
+    if (first) {
+        lastStation = activeStation;
+        lastAirOn = airIsOn();
+        lastAirAc = airHasAC();
+        lastAirFan = airGetFan() >= FAN_MIN_SPEED;
+        lastAirPower = airGetPower();
+        lastAirMode = airGetModeStr();
+        lastSleeping = sleeping;
+        lastBoost = boostMode;
+        lastTipError = tipError;
+
+        int pot = analogRead(PIN_POT_FAN);
+        pot = constrain(pot, 0, 4095);
+        int speed = map(pot, 0, 4095, 0, 255);
+        if (speed < FAN_MIN_SPEED / 2) speed = 0;
+        int potPercent = (speed * 100 + 127) / 255;
+        lastPotBucket = ((potPercent + 2) / 5) * 5;
+
+        Serial.print(F("[STATION] "));
+        Serial.println(activeStation == STATION_MODE_HOTAIR
+                     ? F("HOT AIR active ✓")
+                     : F("SOLDER active ✓"));
+        first = false;
         return;
+    }
 
-    lastPrint = millis();
+    if (activeStation != lastStation) {
+        lastStation = activeStation;
+        Serial.print(F("[STATION] "));
+        Serial.println(activeStation == STATION_MODE_HOTAIR
+                     ? F("HOT AIR active ✓")
+                     : F("SOLDER active ✓"));
+    }
 
-    // =========================
-    // SOLDER / PATRI
-    // =========================
+    const bool airOn = airIsOn();
+    if (airOn != lastAirOn) {
+        lastAirOn = airOn;
+        Serial.println(airOn ? F("[AIR] HOT AIR ON") : F("[AIR] HOT AIR OFF"));
+    }
 
-    uint16_t solderRaw = analogRead(TEMP_PIN);
+    const bool airAc = airHasAC();
+    if (airAc != lastAirAc) {
+        lastAirAc = airAc;
+        Serial.println(airAc ? F("[AIR] AC status ✓") : F("[AIR] AC lost"));
+    }
 
-    Serial.println();
-    Serial.println("========== HERMENEX ==========");
+    const bool airFan = airGetFan() >= FAN_MIN_SPEED;
+    if (airFan != lastAirFan) {
+        lastAirFan = airFan;
+        Serial.println(airFan ? F("[AIR] Fan ON ✓") : F("[AIR] Fan OFF"));
+    }
 
-    Serial.print("[SOLDER] ADC Raw     : ");
-    Serial.println(solderRaw);
+    const int airPower = airGetPower();
+    if (airPower != lastAirPower) {
+        lastAirPower = airPower;
+        Serial.print(F("[AIR] Heater "));
+        Serial.print(airPower);
+        Serial.println('%');
+    }
 
-    Serial.print("[SOLDER] Current Temp: ");
-    Serial.print(currentTemp);
-    Serial.println(" C");
+    const char* airMode = airGetModeStr();
+    if (!lastAirMode || strcmp(airMode, lastAirMode) != 0) {
+        lastAirMode = airMode;
+        Serial.print(F("[AIR] Mode "));
+        Serial.println(airMode);
+    }
 
-    Serial.print("[SOLDER] Target Temp : ");
-    Serial.print(targetTemp);
-    Serial.println(" C");
+    int pot = analogRead(PIN_POT_FAN);
+    pot = constrain(pot, 0, 4095);
+    int speed = map(pot, 0, 4095, 0, 255);
+    if (speed < FAN_MIN_SPEED / 2) speed = 0;
 
-    Serial.print("[SOLDER] PWM         : ");
-    Serial.println(pwmOut);
+    int potPercent = (speed * 100 + 127) / 255;
+    int potBucket = ((potPercent + 2) / 5) * 5;
+    if (potBucket > 100) potBucket = 100;
 
-    Serial.print("[SOLDER] Tip Error    : ");
-    Serial.println(tipError ? "YES" : "NO");
+    if (potBucket != lastPotBucket) {
+        lastPotBucket = potBucket;
+        Serial.print(F("[INPUT] FAN POT "));
+        Serial.print(potBucket);
+        Serial.println('%');
+    }
 
+    if (sleeping != lastSleeping) {
+        lastSleeping = sleeping;
+        Serial.println(sleeping ? F("[SLEEP] ON") : F("[SLEEP] OFF"));
+    }
 
-    // =========================
-    // HOT AIR / SIROCCRO
-    // =========================
+    if (boostMode != lastBoost) {
+        lastBoost = boostMode;
+        Serial.println(boostMode ? F("[BOOST] ON") : F("[BOOST] OFF"));
+    }
 
-    Serial.println();
-
-    Serial.print("[HOT AIR] Temp       : ");
-    Serial.print(airGetTemp());
-    Serial.println(" C");
-
-    Serial.print("[HOT AIR] Target     : ");
-    Serial.print(airGetTargetTemp());
-    Serial.println(" C");
-
-    Serial.print("[HOT AIR] Power      : ");
-    Serial.print(airGetPower());
-    Serial.println(" %");
-
-    Serial.print("[HOT AIR] Fan        : ");
-    Serial.print(airGetFan());
-    Serial.println(" %");
-
-    Serial.print("[HOT AIR] AC         : ");
-    Serial.println(airHasAC() ? "YES" : "NO");
-
-    Serial.print("[HOT AIR] State      : ");
-    Serial.println(airIsOn() ? "ON" : "OFF");
-
-    Serial.print("[HOT AIR] Mode       : ");
-    Serial.println(airGetModeStr());
-
-    Serial.println("==============================");
+    if (tipError != lastTipError) {
+        lastTipError = tipError;
+        Serial.println(tipError ? F("[TIP] ERROR") : F("[TIP] OK ✓"));
+    }
 }
 
 #endif
