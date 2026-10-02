@@ -43,37 +43,37 @@ void setup() {
     monitorBoot(F("USB Serial"));
 
     storage.begin();
-    bootMark(F("Storage"));
+    monitorBoot(F("Storage"));
 
     storage.loadSettings();
-    bootMark(F("Settings"));
+    monitorBoot(F("Settings"));
 
     setTipProfile(currentTipMode);
-    bootMark(F("Tip profile"));
+    monitorBoot(F("Tip profile"));
 
     initEncoder();
-    bootMark(F("EC1 / EC2"));
+    monitorBoot(F("EC1 / EC2"));
 
     pinMode(BUZZER_PIN, OUTPUT);
-    bootMark(F("Buzzer"));
+    monitorBoot(F("Buzzer"));
 
     initStations();
-    bootMark(F("Stations / PWM / Hot-Air + Fan"));
+    monitorBoot(F("Stations / PWM / Hot-Air + Fan"));
 
     detectTip();
-    bootMark(F("Tip detect"));
+    monitorBoot(F("Tip detect"));
 
     initMotion();
-    bootMark(F("Motion"));
+    monitorBoot(F("Motion"));
 
     initUartLink();
-    bootMark(F("UART slave / waiting master"));
+    monitorBoot(F("UART slave / waiting master"));
 
     initLcdTemps();
-    bootMark(F("Nokia 1 / 2"));
+    monitorBoot(F("Nokia 1 / 2"));
 
     initOledUI();
-    bootMark(F("OLED"));
+    monitorBoot(F("OLED"));
 
     lastActivity = millis();
     lastControl = millis();
