@@ -94,16 +94,45 @@ static void drawHotAirScreen(bool force) {
     lcdHotAir.printString(on ? "HEATER ON" : "HEATER OFF", 4, 121, on ? GREEN : DARKGREY, BLACK);
 }
 
+static void forceLcdCsHigh() {
+    pinMode(PIN_LCD_CS1, OUTPUT);
+    pinMode(PIN_LCD_CS2, OUTPUT);
+    digitalWrite(PIN_LCD_CS1, HIGH);
+    digitalWrite(PIN_LCD_CS2, HIGH);
+    delayMicroseconds(50);
+}
+
 void initLcdTemps() {
-    // PIO bus wajib diinisialisasi lewat begin() sebelum command LCD.
+    // Kedua CS harus terkunci HIGH sebelum shared PIO bus disentuh.
+    forceLcdCsHigh();
+
     lcdSolder.begin();
-    lcdSolder.setRotation(0);
+    forceLcdCsHigh();
+    delay(50);
 
     lcdHotAir.begin();
-    lcdHotAir.setRotation(0);
+    forceLcdCsHigh();
+    delay(50);
+
+    // Pola dual-LCD debug yang sudah terbukti: LCD1 diinisialisasi ulang
+    // setelah LCD2 agar state controller LCD1 pasti bersih.
+    lcdSolder.initDisplaySoft();
+    forceLcdCsHigh();
 
     ready = true;
     lastDraw = 0;
+    lastSolderCt = -999;
+    lastSolderTt = -999;
+    lastSolderPwm = -999;
+    lastTipErr = false;
+    lastSleep = false;
+    lastBoost = false;
+    lastAirCt = -999;
+    lastAirTt = -999;
+    lastFan = -999;
+    lastAirPower = -999;
+    lastAirOn = false;
+    lastAirMode = nullptr;
 }
 
 void updateLcdTemps() {
