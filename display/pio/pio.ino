@@ -8,7 +8,7 @@
 #define LCD_SCK   0
 #define LCD_RST   6
 #define LCD1_CS   2
-#define LCD2_CS   3
+#define LCD2_CS   14
 
 Nokia105 display1(LCD_SDA, LCD_SCK, LCD_RST, LCD1_CS);
 Nokia105 display2(LCD_SDA, LCD_SCK, LCD_RST, LCD2_CS);
@@ -74,7 +74,7 @@ void loop() {
   uint16_t fg1 = (bg1 == WHITE || bg1 == YELLOW || bg1 == CYAN || bg1 == GREEN) ? BLACK : WHITE;
   display1.backgroundColor(bg1);
   display1.printString("LCD #1", 35, 15, fg1, bg1);
-  display1.printString("CS GP12", 28, 40, fg1, bg1);
+  display1.printString("CS Siap", 28, 40, fg1, bg1);
   display1.printString(colorNames[idx1], 20, 65, fg1, bg1);
   display1.printDigit(idx1 + 1, 55, 100, fg1, bg1);
 
@@ -84,7 +84,7 @@ void loop() {
   uint16_t fg2 = (bg2 == WHITE || bg2 == YELLOW || bg2 == CYAN || bg2 == GREEN) ? BLACK : WHITE;
   display2.backgroundColor(bg2);
   display2.printString("LCD #2", 35, 15, fg2, bg2);
-  display2.printString("CS GP14", 28, 40, fg2, bg2);
+  display2.printString("CS Siap🫪", 28, 40, fg2, bg2);
   display2.printString(colorNames[idx2], 20, 65, fg2, bg2);
   display2.printDigit(idx2 + 1, 55, 100, fg2, bg2);
 
