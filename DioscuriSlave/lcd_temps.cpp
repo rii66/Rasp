@@ -127,10 +127,10 @@ static void drawHotAirScreen(bool force) {
 void initLcdTemps() {
     // Lightweight startup: no full-screen background/clear.
     lcdSolder.initDisplay();
-    lcdSolder.setRotation(1);
+    lcdSolder.setRotation(0);
 
     lcdHotAir.initDisplay(false);
-    lcdHotAir.setRotation(1);
+    lcdHotAir.setRotation(0);
 
     ready = true;
     lastDraw = 0;
