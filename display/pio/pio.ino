@@ -88,7 +88,7 @@ void loop() {
 
   display1.backgroundColor(bg1);
   display1.printString("LCD #1", 35, 15, fg1, bg1);
-  display1.printString("CS GP12", 28, 40, fg1, bg1);
+  display1.printString("CS GP2", 28, 40, fg1, bg1);
   display1.printString(colorNames[idx1], 20, 65, fg1, bg1);
   display1.printDigit(idx1 + 1, 55, 100, fg1, bg1);
 
@@ -100,7 +100,7 @@ void loop() {
 
   display2.backgroundColor(bg2);
   display2.printString("LCD #2", 35, 15, fg2, bg2);
-  display2.printString("CS GP14", 28, 40, fg2, bg2);
+  display2.printString("CS GP3", 28, 40, fg2, bg2);
   display2.printString(colorNames[idx2], 20, 65, fg2, bg2);
   display2.printDigit(idx2 + 1, 55, 100, fg2, bg2);
 
