@@ -103,10 +103,9 @@ static void forceLcdCsHigh() {
 }
 
 void initLcdTemps() {
-    // Urutan ini dibuat sama dengan display/pio/pio.ino.
+    // Init CS2 dulu, lalu CS1.
     forceLcdCsHigh();
 
-    // CS2 dulu, lalu CS1 — tanpa re-init CS1 setelahnya.
     lcdHotAir.begin();
     forceLcdCsHigh();
     delay(50);
@@ -114,6 +113,18 @@ void initLcdTemps() {
     lcdSolder.begin();
     forceLcdCsHigh();
     delay(50);
+
+    // Tambah Re-soft init KEDUA.
+    lcdSolder.initDisplaySoft();
+    forceLcdCsHigh();
+    delay(30);
+
+    lcdHotAir.initDisplaySoft();
+    forceLcdCsHigh();
+
+    // Optional: set rotation.
+    // lcdSolder.setRotation(1);
+    // lcdHotAir.setRotation(1);
 
     ready = true;
     lastDraw = 0;
