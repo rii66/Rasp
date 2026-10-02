@@ -10,6 +10,7 @@
 // ============================================================
 //  Nokia 105 LCD - Full PIO 9-bit SPI for RP2040
 //  Dual / Quad ready (1 SM shared bus + separate CS)
+//  FIX: shared RST + longer CS timing
 // ============================================================
 
 #ifndef NOKIA105_WIDTH
@@ -31,7 +32,6 @@
 #define spaceBetweenScanLines 16
 #define fullLengthVertical    160
 
-// Colors RGB565
 #define BLACK       0x0000
 #define NAVY        0x000F
 #define DARKGREEN   0x03E0
@@ -54,16 +54,12 @@
 
 class Nokia105 {
 public:
-  /**
-   * Shared bus pins (SDA + SCK) must be the same for all instances.
-   * CS must be unique. RST may be shared.
-   */
   Nokia105(int sda, int sck, int rst, int cs);
 
-  // Call once (or first display). freq_hz = target bit rate
-  void begin(uint32_t freq_hz = 40000000);
+  void begin(uint32_t freq_hz = 20000000);
 
   void initDisplay();
+  void initDisplaySoft();   // software only (no hardware RST)
   void reset();
   void displayOn();
   void displayOff();
@@ -103,9 +99,8 @@ private:
   void writeData16(uint16_t color);
   void csLow();
   void csHigh();
-  void pioPut(uint16_t val9);   // push 9-bit value to SM
+  void pioPut(uint16_t val9);
 
-  // static shared PIO resources
   static bool     _pio_ok;
   static PIO      _pio;
   static uint     _sm;
