@@ -103,45 +103,23 @@ static void forceLcdCsHigh() {
 }
 
 void initLcdTemps() {
+    // Urutan identik dengan display/pio yang sudah terbukti hidup.
     forceLcdCsHigh();
 
     // 1. Init CS1
-    lcdSolder.begin();
+    lcdSolder.begin(20000000);
     forceLcdCsHigh();
     delay(50);
 
     // 2. Init CS2
-    lcdHotAir.begin();
+    lcdHotAir.begin(20000000);
     forceLcdCsHigh();
     delay(50);
 
-    // 3. Re-init keduanya
+    // 3. Re-init CS1 setelah CS2
     lcdSolder.initDisplaySoft();
     forceLcdCsHigh();
-    delay(20);
-
-    lcdHotAir.initDisplaySoft();
-    forceLcdCsHigh();
-    delay(20);
-
-    // 4. Pastikan state akhir
-    lcdSolder.setRotation(1);
-    forceLcdCsHigh();
-    lcdHotAir.setRotation(1);
-    forceLcdCsHigh();
-
-    lcdSolder.backgroundColor(BLACK);
-    forceLcdCsHigh();
-    lcdHotAir.backgroundColor(BLACK);
-    forceLcdCsHigh();
-
-    // Diagnostik CS2: test pattern sekali setelah init.
-    lcdHotAir.smpteTest();
-    forceLcdCsHigh();
-    delay(2000);
-
-    lcdHotAir.backgroundColor(BLACK);
-    forceLcdCsHigh();
+    delay(50);
 
     ready = true;
     lastDraw = 0;
