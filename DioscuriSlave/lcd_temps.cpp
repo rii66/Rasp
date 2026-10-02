@@ -103,28 +103,45 @@ static void forceLcdCsHigh() {
 }
 
 void initLcdTemps() {
-    // Init CS2 dulu, lalu CS1.
     forceLcdCsHigh();
 
-    lcdHotAir.begin(5000000);
-    forceLcdCsHigh();
-    delay(50);
-
-    lcdSolder.begin(5000000);
+    // 1. Init CS1
+    lcdSolder.begin();
     forceLcdCsHigh();
     delay(50);
 
-    // Tambah Re-soft init KEDUA.
+    // 2. Init CS2
+    lcdHotAir.begin();
+    forceLcdCsHigh();
+    delay(50);
+
+    // 3. Re-init keduanya
     lcdSolder.initDisplaySoft();
     forceLcdCsHigh();
-    delay(30);
+    delay(20);
 
     lcdHotAir.initDisplaySoft();
     forceLcdCsHigh();
+    delay(20);
 
-    // Optional: set rotation.
-    // lcdSolder.setRotation(1);
-    // lcdHotAir.setRotation(1);
+    // 4. Pastikan state akhir
+    lcdSolder.setRotation(1);
+    forceLcdCsHigh();
+    lcdHotAir.setRotation(1);
+    forceLcdCsHigh();
+
+    lcdSolder.backgroundColor(BLACK);
+    forceLcdCsHigh();
+    lcdHotAir.backgroundColor(BLACK);
+    forceLcdCsHigh();
+
+    // Diagnostik CS2: test pattern sekali setelah init.
+    lcdHotAir.smpteTest();
+    forceLcdCsHigh();
+    delay(2000);
+
+    lcdHotAir.backgroundColor(BLACK);
+    forceLcdCsHigh();
 
     ready = true;
     lastDraw = 0;
