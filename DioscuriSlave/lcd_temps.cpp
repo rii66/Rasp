@@ -38,7 +38,7 @@ static void drawSolderScreen(bool force) {
     lastBoost = boostMode;
 
     lcdSolder.printString("SOLDER", 4, 2, CYAN, BLACK);
-    lcdSolder.lineHorixontal(0, 20, 160, DARKGREY);
+    lcdSolder.lineHorizontal(0, 20, 160, DARKGREY);
 
     lcdSolder.printString("ACT", 4, 27, LIGHTGREY, BLACK);
     lcdSolder.printDigit(ct < 0 ? 0 : (unsigned)ct, 30, 25, WHITE, BLACK);
@@ -63,7 +63,7 @@ static void drawSolderScreen(bool force) {
     snprintf(buf, sizeof(buf), "PWM %d%%", (pwm * 100) / 255);
     lcdSolder.printString(buf, 4, 77, CYAN, BLACK);
 
-    lcdSolder.lineHorixontal(4, 101, 152, DARKGREY);
+    lcdSolder.lineHorizontal(4, 101, 152, DARKGREY);
     lcdSolder.printString("TIP", 4, 105, LIGHTGREY, BLACK);
 
     if (tipError) {
@@ -99,7 +99,7 @@ static void drawHotAirScreen(bool force) {
     lastAirMode = mode;
 
     lcdHotAir.printString("HOT AIR", 4, 2, MAGENTA, BLACK);
-    lcdHotAir.lineHorixontal(0, 20, 160, DARKGREY);
+    lcdHotAir.lineHorizontal(0, 20, 160, DARKGREY);
 
     lcdHotAir.printString("ACT", 4, 27, LIGHTGREY, BLACK);
     lcdHotAir.printDigit(ct < 0 ? 0 : (unsigned)ct, 30, 25, WHITE, BLACK);
@@ -119,7 +119,7 @@ static void drawHotAirScreen(bool force) {
     snprintf(buf, sizeof(buf), "FAN %d%%", (fan * 100) / 255);
     lcdHotAir.printString(buf, 4, 93, CYAN, BLACK);
 
-    lcdHotAir.lineHorixontal(4, 117, 152, DARKGREY);
+    lcdHotAir.lineHorizontal(4, 117, 152, DARKGREY);
     lcdHotAir.printString(on ? "HEATER ON" : "HEATER OFF", 4, 121,
                           on ? GREEN : DARKGREY, BLACK);
 }
@@ -129,7 +129,7 @@ void initLcdTemps() {
     lcdSolder.initDisplay();
     lcdSolder.setRotation(0);
 
-    lcdHotAir.initDisplay(false);
+    lcdHotAir.initDisplay();
     lcdHotAir.setRotation(0);
 
     ready = true;
