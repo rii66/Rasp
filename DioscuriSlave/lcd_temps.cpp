@@ -103,23 +103,22 @@ static void forceLcdCsHigh() {
 }
 
 void initLcdTemps() {
-    // Urutan identik dengan display/pio yang sudah terbukti hidup.
+    // Pattern yang terbukti bekerja di display/pio/pio.ino:
+    // 1) init CS1
+    // 2) init CS2
+    // 3) re-init CS1 setelah CS2
     forceLcdCsHigh();
 
-    // 1. Init CS1 (akan melakukan hardware reset + PIO setup)
     lcdSolder.begin(20000000);
     forceLcdCsHigh();
     delay(50);
 
-    // 2. Init CS2
     lcdHotAir.begin(20000000);
     forceLcdCsHigh();
-    delay(100);
+    delay(50);
 
-    // 3. Force hard re-init untuk CS2 saja (karena hardware RST sudah di-trigger oleh CS1)
-    lcdHotAir.reset();
-    delay(150);
-    lcdHotAir.initDisplaySoft();
+    // Re-init LCD1 after LCD2, matching the known-good dual display pattern.
+    lcdSolder.initDisplaySoft();
     forceLcdCsHigh();
     delay(50);
 
