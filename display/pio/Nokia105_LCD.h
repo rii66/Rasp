@@ -4,7 +4,8 @@
 #include "Arduino.h"
 #include "fonts.h"
 #include "cmd.h"
-#include "clocks.h"
+#include "hardware/pio.h"
+#include "hardware/clocks.h"
 
 // ============================================================
 //  Nokia 105 LCD - Full PIO 9-bit SPI for RP2040
