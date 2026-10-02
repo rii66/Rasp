@@ -24,83 +24,12 @@
 #include "lcd_temps.h"
 #include "oled_ui.h"
 #include "platform_compat.h"
+#include "monitoring.h"
 
 #define STATUS_LED 25
 
 static const uint32_t CONTROL_MS = 50;
-static const uint32_t TIP_MS     = 500;
-static uint32_t lastControl = 0, lastTip = 0;
-
-static void bootMark(const __FlashStringHelper* label) {
-    Serial.print(F("[BOOT] "));
-    Serial.print(label);
-    Serial.println(F(" ✓"));
-}
-
-static void logRuntimeEvents() {
-    static bool first = true;
-    static StationMode lastStation = STATION_MODE_SOLDER;
-
-    static bool lastAirOn = false;
-    static bool lastAirAc = false;
-    static bool lastAirFan = false;
-    static int lastAirPower = -1;
-    static const char* lastAirMode = nullptr;
-
-    if (first) {
-        lastStation = activeStation;
-        lastAirOn = airIsOn();
-        lastAirAc = airHasAC();
-        lastAirFan = airGetFan() >= FAN_MIN_SPEED;
-        lastAirPower = airGetPower();
-        lastAirMode = airGetModeStr();
-        first = false;
-        return;
-    }
-
-    if (activeStation != lastStation) {
-        lastStation = activeStation;
-        Serial.println(activeStation == STATION_MODE_HOTAIR
-                     ? F("[STATION] HOT AIR active ✓")
-                     : F("[STATION] SOLDER active ✓"));
-    }
-
-    const bool airOn = airIsOn();
-    if (airOn != lastAirOn) {
-        lastAirOn = airOn;
-        Serial.println(airOn
-                     ? F("[AIR] HOT AIR ON")
-                     : F("[AIR] HOT AIR OFF"));
-    }
-
-    const bool airFan = airGetFan() >= FAN_MIN_SPEED;
-    if (airFan != lastAirFan) {
-        lastAirFan = airFan;
-        Serial.println(airFan
-                     ? F("[AIR] Fan OK ✓")
-                     : F("[AIR] Fan OFF"));
-    }
-
-    const bool airAc = airHasAC();
-    if (airAc != lastAirAc) {
-        lastAirAc = airAc;
-        Serial.println(airAc
-                     ? F("[AIR] AC OK ✓")
-                     : F("[AIR] AC lost"));
-    }
-
-    const int airPower = airGetPower();
-    if (airPower != lastAirPower) {
-        lastAirPower = airPower;
-        Serial.printf("[AIR] Heater %d%%\n", airPower);
-    }
-
-    const char* airMode = airGetModeStr();
-    if (!lastAirMode || strcmp(airMode, lastAirMode) != 0) {
-        lastAirMode = airMode;
-        Serial.printf("[AIR] Mode %s\n", airMode);
-    }
-}
+static uint32_t lastControl = 0;
 
 void setup() {
     pinMode(STATUS_LED, OUTPUT);
@@ -111,7 +40,7 @@ void setup() {
     delay(100);
 
     Serial.println(F("\r\n========== Dioscuri SLAVE RP2040 =========="));
-    bootMark(F("USB Serial"));
+    monitorBoot(F("USB Serial"));
 
     storage.begin();
     bootMark(F("Storage"));
@@ -147,7 +76,7 @@ void setup() {
     bootMark(F("OLED"));
 
     lastActivity = millis();
-    lastControl = lastTip = millis();
+    lastControl = millis();
 
     beep();
 
@@ -162,10 +91,6 @@ void loop() {
     // EC1: solder temp / menu. Long hold SW1 opens/closes OLED menu.
     const int enc1Delta = getEncoderDelta();
     const bool sw1 = buttonPressed();
-
-    if (enc1Delta != 0) {
-        Serial.printf("[INPUT] EC1 %+d\n", enc1Delta);
-    }
 
     handleMenu(enc1Delta, sw1);
     menuClick = false;
@@ -192,14 +117,9 @@ void loop() {
                 item = 0;
             }
 
-            Serial.println(inMenu
-                         ? F("[INPUT] EC2 SW long → MENU ON")
-                         : F("[INPUT] EC2 SW long → MENU OFF"));
-
             beepLong();
         }
         else if (hold > 50) {
-            Serial.println(F("[INPUT] EC2 SW short"));
             handleAirButton();
             activeStation = STATION_MODE_HOTAIR;
         }
@@ -210,7 +130,6 @@ void loop() {
     // EC2 rotation controls hot-air target outside OLED menu.
     const int airDelta = getEncoder2Delta();
     if (airDelta != 0 && !inMenu) {
-        Serial.printf("[INPUT] EC2 %+d\n", airDelta);
         activeStation = STATION_MODE_HOTAIR;
         handleAirEncoder(airDelta);
     }
@@ -235,5 +154,6 @@ void loop() {
     updateLcdTemps();
     updateOledUI();
 
-    logRuntimeEvents();
+    monitorInput(enc1Delta, airDelta);
+    monitorRuntime();
 }
