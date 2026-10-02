@@ -342,29 +342,16 @@ void Nokia105::printSingleChar(unsigned char c, unsigned char x, unsigned char y
   if (c < 0x20 || c > 0x7A) c = '?';
   c -= 0x20;
 
-  // Satu window + satu CS untuk seluruh glyph (8x16).
-  // Jangan putus CS pada setiap pixel/row.
-  setDrawPositionAxis(x, y, x + 7, y + 15);
-
-  csLow();
-  busy_wait_us(1);
+  setDrawPosition(x, y);
 
   for (uint8_t row = 0; row < 16; row++) {
     uint8_t bits = font8x16[c][row];
-
     for (uint8_t col = 0; col < 8; col++) {
-      const uint16_t color = (bits & 0x01) ? fg : bg;
-      pioPut(0x100 | (color >> 8));
-      pioPut(0x100 | (color & 0xFF));
+      writeData16((bits & 0x01) ? fg : bg);
       bits >>= 1;
     }
+    setDrawPosition(x, ++y);
   }
-
-  while (!pio_sm_is_tx_fifo_empty(_pio, _sm))
-    tight_loop_contents();
-
-  busy_wait_us(5);
-  csHigh();
 }
 
 void Nokia105::printString(const char *str, uint8_t x, uint8_t y,
