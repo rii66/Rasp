@@ -1,4 +1,20 @@
-// TEST
+/*
+ * Nokia 105 LCD - Single File for Raspberry Pi Pico (RP2040)
+ * All library code merged into one sketch - just compile & upload
+ *
+ * Backlight langsung ke 3.3V (hemat pin)
+ *
+ * Wiring:
+ * LCD_SDA  → GP11
+ * LCD_SCK  → GP10
+ * LCD_RST  → GP12
+ * LCD_CS   → GP13
+ * LED+     → 3.3V
+ * LED-     → GND
+ * VDD/VDDI → 3.3V
+ * GND      → GND
+ */
+
 #include <Arduino.h>
 
 // ===================== PIN PICO =====================
@@ -338,7 +354,7 @@ const char text[][16] ={
 #define PINK              0xF81F
 
 class Nokia105 {
-	public:
+public:
   Nokia105(int SID, int SCLK, int RST, int CS);
   void setBacklightPin(int pin);
   void begin();
@@ -347,121 +363,162 @@ class Nokia105 {
   void displayOff();
   void invertDisplay(bool invert = true);
   void setRotation(uint8_t r);
-	/**********************************************************************/
-  /*!
-    @brief    Pin defination
-    @param    SPIDEVICE_CS, SPIDEVICE_RES, SPIDEVICE_SDA or Mosi, SPIDEVICE_SCK
-    spi proceed by defined gpio.
-  */
-  /**********************************************************************/
-		
-	void	initDisplay(),
-  /**********************************************************************/
-  /*!
-    @brief    lcd initialize
-    @param    
-  */
-  /**********************************************************************/
-  
-      PWMinit(),    
-  /**********************************************************************/
-  /*!
-    @brief    start the inbuilt timers to generate pwm
-    @param    
-  */
-  /**********************************************************************/
+  void initDisplay();
+  void PWMinit();
+  void setLcdBrightness(uint16_t PWM);
+  void setDrawPosition(unsigned char x, unsigned char y);
+  void setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
+  void drawPixel(int16_t x, int16_t y, uint16_t color);
+  void image1d(uint16_t w, uint16_t h, uint16_t shiftX, uint16_t shiftY, const uint16_t image[]);
+  void printDigit(unsigned int a, int16_t x, int16_t y, uint16_t forgroundColor, uint16_t backgroundColor);
+  void drawtext(unsigned char c, unsigned char x, unsigned char y, uint16_t color);
+  void fillRectangle(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+  void smpteTest();
+  void printBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t w, int16_t h, uint16_t color);
+  void backgroundColor(uint16_t c);
+  void colorPalletTest();
+  void lineHorixontal(int16_t x, int16_t y, int16_t h, uint16_t color);
+  void lineVertical(int16_t x, int16_t y, int16_t w, uint16_t color);
+  void circle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+  void printSingleChar(unsigned char c, unsigned char x, unsigned char y, uint16_t forgroundColor, uint16_t backgroundColor);
+  void printStringChar(const char *String, unsigned char x, unsigned char y, uint16_t forgroundColor, uint16_t backgroundColor);
+  void printString(const char *str, uint8_t x, uint8_t y, uint16_t forgroundColor, uint16_t backgroundColor);
+  void displayClear();
 
-      setLcdBrightness(uint16_t PWM),    
-  /**********************************************************************/
-  /*!
-    @brief    simple map the input 16 bit values to counter
-    @param    
-  */
-  /**********************************************************************/
-     
-  setDrawPosition(unsigned char x, unsigned char y),
-  /**********************************************************************/
-  /*!
-    @brief    set window cursor to push colors
-    @param    x-> number of pixels in x axis or horizontal, y>x-> number of pixels in y axis or vertical
-  */
-  /**********************************************************************/
-        
-  setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1),
-  /**********************************************************************/
-  /*!
-    @brief    set window cursor to push colors
-    @param    x-> number of pixels in x axis or horizontal, y>x-> number of pixels in y axis or vertical
-    x0: start position | x1: end position 
-    y0: start position | y1: end position
-  */
-  /**********************************************************************/
-  
-  drawPixel(int16_t x, int16_t y, uint16_t color), 
-	/**********************************************************************/
-  /*!
-    @brief    as function name says, it drae 1 pixel on screen
-    @param    x: horizonal position, y: vertical position,color: 16 bit color in hex
-  */
-  /**********************************************************************/
-	
-	image1d (uint16_t w, uint16_t h, uint16_t shiftX,uint16_t shiftY, const uint16_t image[] ),
-	/**********************************************************************/
-  /*!
-    @brief    Pin defination
-    @param    
-  */
-  /**********************************************************************/
-	
-	/*image2d (int w, int h, int shiftX,int shiftY, const uint16_t image[][80] ),*/
-  /**********************************************************************/
-  /*!
-    @brief    Pin defination
-    @param    
-  */
-  /**********************************************************************/
-				
-	printDigit(unsigned int a, int16_t x, int16_t y,uint16_t forgroundColor,uint16_t backgroundColor),
-  /**********************************************************************/
-  /*!
-    @brief    digit print working upto 10,000 only unsigned integers 
-    @param    
-  */
-  /**********************************************************************/
+private:
+  void writeNokiaCommand(unsigned char c);
+  void writeNokiaData(unsigned char c);
 
-	drawtext(unsigned char c, unsigned char x, unsigned char y ,uint16_t color),
-  /**********************************************************************/
-  /*!
-    @brief    as per function name. it draw the text but it is in beta.
-    @param    
-  */
-  /**********************************************************************/
-				
-	fillRectangle (int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color),
-  /**********************************************************************/
-  /*!
-    @brief    rectanglle  shape color 
-    @param    
-  */
-  /**********************************************************************/
-	
-	smpteTest(),
-  /**********************************************************************/
-  /*!
-    @brief    colorfull rectangles
-    @param    
-  */
-  /**********************************************************************/
-	
-	printBitmap(int16_t x, int16_t y, const uint8_t bitmap[],int16_t w, int16_t h, uint16_t color),
-	/**********************************************************************/
-  /*!
-    @brief    bitmap 
-    @param    
-  */
-  /**********************************************************************/
-	
-	backgroundColor(uint16_t c),
-  /**********************************************************************/
-  /*!
-    @brief    fill t
+  int SPIDEVICE_CS;
+  int SPIDEVICE_RES;
+  int SPIDEVICE_SDA;
+  int SPIDEVICE_SCK;
+  int backLightPin;
+  uint8_t rotationValue;
+};
+
+
+// ===================== DRIVER IMPLEMENTATION =====================
+
+Nokia105::Nokia105(int SDA, int SCLK, int RST, int CS)
+  : SPIDEVICE_CS(CS), SPIDEVICE_RES(RST), SPIDEVICE_SDA(SDA),
+    SPIDEVICE_SCK(SCLK), backLightPin(-1), rotationValue(0) {}
+
+void Nokia105::setBacklightPin(int pin) {
+  backLightPin = pin;
+  if (pin >= 0) {
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, LOW);
+  }
+}
+
+void Nokia105::reset() {
+  LCD_RES_Low();
+  delay(10);
+  LCD_RES_High();
+  delay(120);
+}
+
+void Nokia105::begin() {
+  initDisplay();
+}
+
+void Nokia105::displayOn() {
+  writeNokiaCommand(NOKIA105_DISPON);
+}
+
+void Nokia105::displayOff() {
+  writeNokiaCommand(NOKIA105_DISPOFF);
+}
+
+void Nokia105::invertDisplay(bool invert) {
+  writeNokiaCommand(invert ? NOKIA105_INVON : NOKIA105_INVOFF);
+}
+
+void Nokia105::setRotation(uint8_t r) {
+  rotationValue = r & 3;
+  uint8_t mad = 0x08;
+  switch (rotationValue) {
+    case 0: mad = 0x08; break;
+    case 1: mad = 0x68; break;
+    case 2: mad = 0xC8; break;
+    case 3: mad = 0xA8; break;
+  }
+  writeNokiaCommand(NOKIA105_MADCTL);
+  writeNokiaData(mad);
+}
+
+void Nokia105::writeNokiaCommand(unsigned char Cmd) {
+  LCD_CS_Low();
+  LCD_SDA_Low();
+  LCD_SCK_Low();
+  LCD_SCK_High();
+  LCD_SCK_Low();
+  for (uint8_t mask = 0x80; mask; mask >>= 1) {
+    digitalWrite(SPIDEVICE_SDA, (Cmd & mask) ? HIGH : LOW);
+    LCD_SCK_High();
+    LCD_SCK_Low();
+  }
+  LCD_CS_High();
+}
+
+void Nokia105::writeNokiaData(unsigned char Data) {
+  LCD_CS_Low();
+  LCD_SDA_High();
+  LCD_SCK_Low();
+  LCD_SCK_High();
+  LCD_SCK_Low();
+  for (uint8_t mask = 0x80; mask; mask >>= 1) {
+    digitalWrite(SPIDEVICE_SDA, (Data & mask) ? HIGH : LOW);
+    LCD_SCK_High();
+    LCD_SCK_Low();
+  }
+  LCD_CS_High();
+}
+
+void Nokia105::displayClear(void) {
+  setDrawPositionAxis(0, 0, WIDTH - 1, HEIGHT - 1);
+  uint32_t n = (uint32_t)WIDTH * HEIGHT;
+  while (n--) {
+    writeNokiaData(0);
+    writeNokiaData(0);
+  }
+}
+
+void Nokia105::initDisplay(void) {
+  pinMode(SPIDEVICE_CS, OUTPUT);
+  pinMode(SPIDEVICE_RES, OUTPUT);
+  pinMode(SPIDEVICE_SDA, OUTPUT);
+  pinMode(SPIDEVICE_SCK, OUTPUT);
+
+  digitalWrite(SPIDEVICE_CS, HIGH);
+  digitalWrite(SPIDEVICE_SCK, LOW);
+  digitalWrite(SPIDEVICE_SDA, LOW);
+  reset();
+
+  writeNokiaCommand(NOKIA105_SWRESET);
+  delay(120);
+  writeNokiaCommand(NOKIA105_SPLOUT);
+  delay(120);
+  writeNokiaCommand(NOKIA105_COLMOD);
+  writeNokiaData(0x05);
+  setRotation(0);
+  writeNokiaCommand(NOKIA105_NORON);
+  delay(10);
+  displayOn();
+  delay(10);
+  displayClear();
+}
+
+void Nokia105::setDrawPosition(unsigned char x, unsigned char y) {
+  setDrawPositionAxis(x, y, x + 7, y + 15);
+}
+
+void Nokia105::setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
+  uint8_t t0, t1;
+  switch (rotationValue) {
+    case 1:
+      t0 = WIDTH - 1 - y1; t1 = WIDTH - 1 - y0;
+      y0 = x0; x0 = t0; y1 = x1; x1 = t1; break;
+    case 2:
+ 
