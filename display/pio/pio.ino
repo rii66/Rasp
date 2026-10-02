@@ -39,7 +39,7 @@ void setup() {
   Serial.begin(115200);
   delay(500);
   Serial.println("=== Nokia 105 PIO Dual Debug v3 ===");
-  Serial.println("CS1=GP12  CS2=GP14  RST=GP6  SDA=1  SCK=0");
+  Serial.println("CS1=GP2  CS2=GP3  RST=GP6  SDA=1  SCK=0");
 
   forceAllCS_High();
 
