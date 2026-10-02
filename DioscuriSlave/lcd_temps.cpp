@@ -106,11 +106,11 @@ void initLcdTemps() {
     // Init CS2 dulu, lalu CS1.
     forceLcdCsHigh();
 
-    lcdHotAir.begin(1000000);
+    lcdHotAir.begin(5000000);
     forceLcdCsHigh();
     delay(50);
 
-    lcdSolder.begin(1000000);
+    lcdSolder.begin(5000000);
     forceLcdCsHigh();
     delay(50);
 
