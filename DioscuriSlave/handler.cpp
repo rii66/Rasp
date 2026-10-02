@@ -49,16 +49,6 @@ void updateAirFanFromPot() {
     if (speed < FAN_MIN_SPEED / 2)
         speed = 0;
 
-    // Debug input: hanya log perubahan level 5%, bukan setiap ADC sample.
-    static int lastPotLog = -1;
-    int potPercent = (speed * 100 + 127) / 255;
-    int potBucket = ((potPercent + 2) / 5) * 5;
-    if (potBucket > 100) potBucket = 100;
-    if (potBucket != lastPotLog) {
-        lastPotLog = potBucket;
-        Serial.printf("[INPUT] FAN POT %d%%\n", potBucket);
-    }
-
     // Jangan tulis PWM berulang jika nilai tidak berubah.
     if (speed == lastSpeed) return;
     lastSpeed = speed;
