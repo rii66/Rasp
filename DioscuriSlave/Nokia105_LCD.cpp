@@ -73,7 +73,7 @@ void Nokia105::writeData16(uint16_t color) {
   csHigh();
 }
 
-void Nokia105::begin(uint32_t freq_hz, bool doReset) {
+void Nokia105::begin(uint32_t freq_hz) {
   static bool rst_done = false;
 
   if (!_pio_ok) {
@@ -112,7 +112,7 @@ void Nokia105::begin(uint32_t freq_hz, bool doReset) {
   gpio_put(_rst, 1);
 
   // Hardware reset ONLY once (shared RST)
-  if (doReset && !rst_done) {
+  if (!rst_done) {
     reset();
     rst_done = true;
   }
@@ -147,8 +147,9 @@ void Nokia105::setRotation(uint8_t r) {
   writeData(mad);
 }
 
-void Nokia105::initDisplay(bool doReset) {
-  begin(20000000, doReset);
+void Nokia105::initDisplay() {
+  reset();
+  initDisplaySoft();
 }
 
 void Nokia105::initDisplaySoft() {
@@ -279,10 +280,6 @@ void Nokia105::lineHorizontal(int16_t x, int16_t y, int16_t w, uint16_t color) {
     tight_loop_contents();
   busy_wait_us(3);
   csHigh();
-}
-
-void Nokia105::lineHorixontal(int16_t x, int16_t y, int16_t w, uint16_t color) {
-  lineHorizontal(x, y, w, color);
 }
 
 void Nokia105::lineVertical(int16_t x, int16_t y, int16_t h, uint16_t color) {
