@@ -74,8 +74,6 @@ void Nokia105::writeData16(uint16_t color) {
 }
 
 void Nokia105::begin(uint32_t freq_hz) {
-  static bool rst_done = false;
-
   if (!_pio_ok) {
     _pio = pio0;
     _sm = pio_claim_unused_sm(_pio, true);
@@ -111,12 +109,8 @@ void Nokia105::begin(uint32_t freq_hz) {
   gpio_set_dir(_rst, GPIO_OUT);
   gpio_put(_rst, 1);
 
-  // Hardware reset ONLY once (shared RST)
-  if (!rst_done) {
-    reset();
-    rst_done = true;
-  }
-
+  // Shared reset pin: do hard reset every time to ensure both LCDs wake reliably.
+  reset();
   initDisplaySoft();
 }
 
