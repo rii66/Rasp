@@ -56,9 +56,9 @@ class Nokia105 {
 public:
   Nokia105(int sda, int sck, int rst, int cs);
 
-  void begin(uint32_t freq_hz = 20000000, bool doReset = true);
+  void begin(uint32_t freq_hz = 20000000);
 
-  void initDisplay(bool doReset = true);
+  void initDisplay();
   void initDisplaySoft();   // software only (no hardware RST)
   void reset();
   void displayOn();
@@ -75,7 +75,6 @@ public:
   void displayClear();
 
   void lineHorizontal(int16_t x, int16_t y, int16_t w, uint16_t color);
-  void lineHorixontal(int16_t x, int16_t y, int16_t w, uint16_t color);
   void lineVertical(int16_t x, int16_t y, int16_t h, uint16_t color);
   void circle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
 
