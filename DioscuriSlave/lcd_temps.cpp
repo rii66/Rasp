@@ -106,16 +106,14 @@ void initLcdTemps() {
     // Urutan ini dibuat sama dengan display/pio/pio.ino.
     forceLcdCsHigh();
 
-    lcdSolder.begin();
-    forceLcdCsHigh();
-    delay(50);
-
+    // CS2 dulu, lalu CS1 — tanpa re-init CS1 setelahnya.
     lcdHotAir.begin();
     forceLcdCsHigh();
     delay(50);
 
-    lcdSolder.initDisplaySoft();
+    lcdSolder.begin();
     forceLcdCsHigh();
+    delay(50);
 
     ready = true;
     lastDraw = 0;
