@@ -11,8 +11,8 @@
 #define LCD_RST   6
 
 // ====== CS per display ======
-#define LCD1_CS   12
-#define LCD2_CS   14
+#define LCD1_CS   2
+#define LCD2_CS   3
 
 Nokia105 display1(LCD_SDA, LCD_SCK, LCD_RST, LCD1_CS);
 Nokia105 display2(LCD_SDA, LCD_SCK, LCD_RST, LCD2_CS);
