@@ -106,7 +106,7 @@ void initLcdTemps() {
     // Urutan identik dengan display/pio yang sudah terbukti hidup.
     forceLcdCsHigh();
 
-    // 1. Init CS1
+    // 1. Init CS1 (akan melakukan hardware reset + PIO setup)
     lcdSolder.begin(20000000);
     forceLcdCsHigh();
     delay(50);
@@ -114,10 +114,12 @@ void initLcdTemps() {
     // 2. Init CS2
     lcdHotAir.begin(20000000);
     forceLcdCsHigh();
-    delay(50);
+    delay(100);
 
-    // 3. Re-init CS1 setelah CS2
-    lcdSolder.initDisplaySoft();
+    // 3. Force hard re-init untuk CS2 saja (karena hardware RST sudah di-trigger oleh CS1)
+    lcdHotAir.reset();
+    delay(150);
+    lcdHotAir.initDisplaySoft();
     forceLcdCsHigh();
     delay(50);
 
