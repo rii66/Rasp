@@ -103,7 +103,7 @@ static void forceLcdCsHigh() {
 }
 
 void initLcdTemps() {
-    // Kedua CS harus terkunci HIGH sebelum shared PIO bus disentuh.
+    // Urutan ini dibuat sama dengan display/pio/pio.ino.
     forceLcdCsHigh();
 
     lcdSolder.begin();
@@ -114,19 +114,19 @@ void initLcdTemps() {
     forceLcdCsHigh();
     delay(50);
 
-    // Pola dual-LCD debug yang sudah terbukti: LCD1 diinisialisasi ulang
-    // setelah LCD2 agar state controller LCD1 pasti bersih.
     lcdSolder.initDisplaySoft();
     forceLcdCsHigh();
 
     ready = true;
     lastDraw = 0;
+
     lastSolderCt = -999;
     lastSolderTt = -999;
     lastSolderPwm = -999;
     lastTipErr = false;
     lastSleep = false;
     lastBoost = false;
+
     lastAirCt = -999;
     lastAirTt = -999;
     lastFan = -999;
