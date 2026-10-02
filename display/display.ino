@@ -5,7 +5,7 @@
 #define LCD_SDA   0
 #define LCD_SCK   1
 #define LCD_RST   6
-#define LCD_CS    3
+#define LCD_CS    14
 // ====================================================
 
 // ===================== FONTS =====================
