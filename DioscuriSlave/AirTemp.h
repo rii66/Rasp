@@ -23,7 +23,8 @@ public:
   // Panggil sesering mungkin
   void update() {
     int32_t raw = analogRead(PIN_HOTAIR_ADC);
-    emp_data += raw - (emp_data + (emp_k >> 1)) / emp_k;
+    emp_data += raw;
+    emp_data -= emp_data / emp_k;
   }
 
   // Nilai yang sudah difilter

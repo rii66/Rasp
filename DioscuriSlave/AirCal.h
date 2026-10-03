@@ -39,7 +39,8 @@ public:
       return map(adc, tip[1], tip[2], TEMP_TIP[1], TEMP_TIP[2]);
     } 
     else {
-      return map(adc, tip[0], tip[2], TEMP_TIP[0], TEMP_TIP[2]);
+      // Past the highest calibration point, keep the last segment slope stable.
+      return map(adc, tip[1], tip[2], TEMP_TIP[1], TEMP_TIP[2]);
     }
   }
 

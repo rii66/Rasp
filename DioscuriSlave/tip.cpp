@@ -97,8 +97,18 @@ void applyTipProfile(TipConfig *targetTip)
 
     maxTemp = targetTip->maxTemp;
 
-    tempOffset = targetTip->tempOffset;
-    adcOffset  = targetTip->adcOffset;
+    // Keep calibration values coherent even when the profile was created
+    // with a raw database that did not initialize the linear conversion fields.
+    if (targetTip->tipID != TIP_CUSTOM && targetTip->maxADC > targetTip->minADC) {
+        targetTip->slope = ((float)TEMP_TIP[2] - (float)TEMP_TIP[0]) /
+                           ((float)targetTip->maxADC - (float)targetTip->minADC);
+        targetTip->tempOffset = TEMP_TIP[0];
+        targetTip->adcOffset = 0;
+    } else {
+        targetTip->slope = 0.0f;
+        targetTip->tempOffset = 0;
+        targetTip->adcOffset = 0;
+    }
 
     maxPwmLimit = constrain(targetTip->maxPWM, 0, PWM_MAX_VAL);
 
