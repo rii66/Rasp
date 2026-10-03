@@ -1,16 +1,3 @@
-#ifndef HOTGUN_H
-#define HOTGUN_H
-
-#include <Arduino.h>
-#include "platform_compat.h"
-#include "config.h"
-#include "ZeroCross.h"
-#include "fan.h"
-#include "AirTemp.h"
-#include "AirPid.h"
-#include "AirCal.h"
-#include "storage.h"
-
 class HotGun {
 public:
   enum Mode {
@@ -52,9 +39,10 @@ public:
   // ======================== Update (panggil di loop) ========================
   void update() {
     temp.update();
+    temp.putHistory();
 
     if (!zc.isActive()) {
-      temp.putHistory();
+      // Keep the sampling history consistent even when line activity is low.
     }
 
     uint32_t now = millis();
@@ -190,5 +178,3 @@ private:
   uint32_t        last_update;
   bool            over_heat = false;
 };
-
-#endif
