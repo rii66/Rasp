@@ -35,12 +35,17 @@ float lastError     = 0;
 // CORE ADC READER (Optimized for RP2040 + multi-platform)
 //====================================================================//
 uint16_t getAverageADC() {
-uint32_t totalRawAdc = 0; // Gunakan 32-bit untuk mencegah overflow saat penjumlahan
-for (uint8_t i = 0; i < ADC_SAMPLE_COUNT; i++) {
-totalRawAdc += analogRead(TEMP_PIN);
-delayMicroseconds(ADC_SAMPLE_DELAY_US);
-}
-return (uint16_t)(totalRawAdc / ADC_SAMPLE_COUNT);
+    // RP2040 ADC mux: TEMP_PIN must be settled after FAN/HOTAIR ADC reads.
+    analogRead(TEMP_PIN);                 // discard first conversion
+    delayMicroseconds(SETTLING_DELAY_US); // allow ADC mux/input to settle
+
+    uint32_t totalRawAdc = 0;
+    for (uint8_t i = 0; i < ADC_SAMPLE_COUNT; i++) {
+        totalRawAdc += analogRead(TEMP_PIN);
+        delayMicroseconds(ADC_SAMPLE_DELAY_US);
+    }
+
+    return (uint16_t)(totalRawAdc / ADC_SAMPLE_COUNT);
 }
 
 //====================================================================//
