@@ -135,6 +135,14 @@ void Nokia105::invertDisplay(bool invert) {
   writeCmd(invert ? NOKIA105_INVON : NOKIA105_INVOFF);
 }
 
+static inline int16_t logicalWidth(uint8_t rotation) {
+  return (rotation & 1) ? HEIGHT : WIDTH;
+}
+
+static inline int16_t logicalHeight(uint8_t rotation) {
+  return (rotation & 1) ? WIDTH : HEIGHT;
+}
+
 void Nokia105::setRotation(uint8_t r) {
   _rotation = r & 3;
   uint8_t mad = 0x08;
@@ -160,7 +168,7 @@ void Nokia105::initDisplaySoft() {
   delay(120);
   writeCmd(NOKIA105_COLMOD);
   writeData(0x05);
-  setRotation(0);
+  setRotation(1);
   writeCmd(NOKIA105_NORON);
   delay(10);
   displayOn();
@@ -206,21 +214,26 @@ void Nokia105::setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y
 }
 
 void Nokia105::drawPixel(int16_t x, int16_t y, uint16_t color) {
-  if ((x < 0) || (x >= WIDTH) || (y < 0) || (y >= HEIGHT)) return;
+  const int16_t w = logicalWidth(_rotation);
+  const int16_t h = logicalHeight(_rotation);
+  if ((x < 0) || (x >= w) || (y < 0) || (y >= h)) return;
   setDrawPositionAxis(x, y, x, y);
   writeData16(color);
 }
 
 void Nokia105::fillRectangle(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-  if ((x >= WIDTH) || (y >= HEIGHT)) return;
+  const int16_t lw = logicalWidth(_rotation);
+  const int16_t lh = logicalHeight(_rotation);
+
+  if ((x >= lw) || (y >= lh)) return;
   int16_t x2 = x + w - 1;
   int16_t y2 = y + h - 1;
   if ((x2 < 0) || (y2 < 0)) return;
 
-  if (x2 >= WIDTH)  w = WIDTH  - x;
-  if (x < 0)        { w += x; x = 0; }
-  if (y2 >= HEIGHT) h = HEIGHT - y;
-  if (y < 0)        { h += y; y = 0; }
+  if (x2 >= lw) w = lw - x;
+  if (x < 0) { w += x; x = 0; }
+  if (y2 >= lh) h = lh - y;
+  if (y < 0) { h += y; y = 0; }
 
   setDrawPositionAxis(x, y, x + w - 1, y + h - 1);
 
@@ -240,13 +253,15 @@ void Nokia105::fillRectangle(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
 }
 
 void Nokia105::backgroundColor(uint16_t c) {
-  setDrawPositionAxis(0, 0, WIDTH - 1, HEIGHT - 1);
+  const int16_t lw = logicalWidth(_rotation);
+  const int16_t lh = logicalHeight(_rotation);
+  setDrawPositionAxis(0, 0, lw - 1, lh - 1);
 
   csLow();
   busy_wait_us(2);
   uint16_t hi = 0x100 | (c >> 8);
   uint16_t lo = 0x100 | (c & 0xFF);
-  uint32_t n = (uint32_t)WIDTH * HEIGHT;
+  uint32_t n = (uint32_t)lw * lh;
   while (n--) {
     pioPut(hi);
     pioPut(lo);
@@ -262,10 +277,12 @@ void Nokia105::displayClear() {
 }
 
 void Nokia105::lineHorizontal(int16_t x, int16_t y, int16_t w, uint16_t color) {
-  if ((y < 0) || (y >= HEIGHT) || (x >= WIDTH)) return;
+  const int16_t lw = logicalWidth(_rotation);
+  const int16_t lh = logicalHeight(_rotation);
+  if ((y < 0) || (y >= lh) || (x >= lw)) return;
   int16_t x2 = x + w - 1;
   if (x2 < 0) return;
-  if (x2 >= WIDTH) w = WIDTH - x;
+  if (x2 >= lw) w = lw - x;
   if (x < 0) { w += x; x = 0; }
 
   setDrawPositionAxis(x, y, x + w - 1, y);
@@ -284,10 +301,12 @@ void Nokia105::lineHorizontal(int16_t x, int16_t y, int16_t w, uint16_t color) {
 }
 
 void Nokia105::lineVertical(int16_t x, int16_t y, int16_t h, uint16_t color) {
-  if ((x < 0) || (x >= WIDTH) || (y >= HEIGHT)) return;
+  const int16_t lw = logicalWidth(_rotation);
+  const int16_t lh = logicalHeight(_rotation);
+  if ((x < 0) || (x >= lw) || (y >= lh)) return;
   int16_t y2 = y + h - 1;
   if (y2 < 0) return;
-  if (y2 >= HEIGHT) h = HEIGHT - y;
+  if (y2 >= lh) h = lh - y;
   if (y < 0) { h += y; y = 0; }
 
   setDrawPositionAxis(x, y, x, y + h - 1);
@@ -357,12 +376,15 @@ void Nokia105::printSingleChar(unsigned char c, unsigned char x, unsigned char y
 
 void Nokia105::printString(const char *str, uint8_t x, uint8_t y,
                            uint16_t fg, uint16_t bg) {
+  const uint8_t lw = (uint8_t)logicalWidth(_rotation);
+  const uint8_t lh = (uint8_t)logicalHeight(_rotation);
+
   while (*str) {
-    if (x > nextLineEdge - 8) {
-      y += spaceBetweenScanLines;
+    if (x > (uint8_t)(lw - 8)) {
+      y += 16;
       x = 0;
     }
-    if (y > fullLengthVertical - 16) break;
+    if (y > (uint8_t)(lh - 16)) break;
 
     printSingleChar(*str, x, y, fg, bg);
     str++;
