@@ -14,13 +14,13 @@
 // ============================================================
 
 #ifndef NOKIA105_WIDTH
-#define NOKIA105_WIDTH  128
+#define NOKIA105_WIDTH  160
 #endif
 #ifndef NOKIA105_HEIGHT
-#define NOKIA105_HEIGHT 160
+#define NOKIA105_HEIGHT 128
 #endif
 #ifndef NOKIA105_X_OFFSET
-#define NOKIA105_X_OFFSET 2
+#define NOKIA105_X_OFFSET 0
 #endif
 #ifndef NOKIA105_Y_OFFSET
 #define NOKIA105_Y_OFFSET 0
@@ -28,9 +28,9 @@
 
 #define WIDTH                 NOKIA105_WIDTH
 #define HEIGHT                NOKIA105_HEIGHT
-#define nextLineEdge          128
+#define nextLineEdge          152
 #define spaceBetweenScanLines 16
-#define fullLengthVertical    160
+#define fullLengthVertical    112
 
 #define BLACK       0x0000
 #define NAVY        0x000F
