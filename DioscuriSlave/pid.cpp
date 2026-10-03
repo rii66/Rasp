@@ -12,12 +12,12 @@
 // CONFIGS & CALIBRATION (Clean & Explicit)
 //====================================================================//
 #if defined(ARDUINO_ARCH_RP2040)
-const uint8_t  ADC_SAMPLE_COUNT     = 6;
-const uint16_t ADC_SAMPLE_DELAY_US  = 50;
+const uint8_t  ADC_SAMPLE_COUNT     = 16;  // ↑ Increased from 6 to 16
+const uint16_t ADC_SAMPLE_DELAY_US  = 20;  // ↓ Reduced from 50 to 20 (320µs total)
 const uint16_t SETTLING_DELAY_US    = 150;
 #else
-const uint8_t  ADC_SAMPLE_COUNT     = 10;
-const uint16_t ADC_SAMPLE_DELAY_US  = 150;
+const uint8_t  ADC_SAMPLE_COUNT     = 24;  // ↑ Increased from 10 to 24
+const uint16_t ADC_SAMPLE_DELAY_US  = 40;  // ↓ Reduced from 150 to 40 (960µs total)
 const uint16_t SETTLING_DELAY_US    = 250;
 #endif
 const int      HEATER_HYSTERESIS    = 5;      // Batas toleransi pemanasan (Celsius)
