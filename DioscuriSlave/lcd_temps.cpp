@@ -55,29 +55,29 @@ static void drawTop(Nokia105& lcd, const char* title, const char* mode, uint16_t
 
 static void drawTempGraph(Nokia105& lcd, int ct, int tt, uint16_t color)
 {
-    lcd.lineHorizontal(5, 31, 150, DARKGREY);
-    lcd.lineHorizontal(5, 38, 150, DARKGREY);
-    lcd.lineHorizontal(5, 45, 150, DARKGREY);
+    lcd.lineHorizontal(5, 34, 150, DARKGREY);
+    lcd.lineHorizontal(5, 40, 150, DARKGREY);
+    lcd.lineHorizontal(5, 46, 150, DARKGREY);
     lcd.lineHorizontal(5, 52, 150, DARKGREY);
-    lcd.lineVertical(5, 31, 22, LIGHTGREY);
-    lcd.lineVertical(154, 31, 22, LIGHTGREY);
+    lcd.lineVertical(5, 34, 19, LIGHTGREY);
+    lcd.lineVertical(154, 34, 19, LIGHTGREY);
     lcd.lineHorizontal(5, 52, 150, LIGHTGREY);
 
     char buf[28];
-    snprintf(buf, sizeof(buf), "Actual:%dC Set:%dC",
+    snprintf(buf, sizeof(buf), "ACT:%dC SET:%dC",
              ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
-    lcd.printString(buf, 8, 19, WHITE, BLACK);
+    lcd.printString(buf, 12, 18, WHITE, BLACK);
 
     int pct = (tt > 0) ? constrain((ct * 100) / tt, 0, 100) : 0;
     int w = (146 * pct) / 100;
     if (w > 0)
-        lcd.fillRectangle(7, 40, w, 6, color);
+        lcd.fillRectangle(7, 43, w, 6, color);
 
     // Target line + actual marker
-    lcd.lineHorizontal(7, 36, 146, color);
+    lcd.lineHorizontal(7, 40, 146, color);
     int marker = 7 + (146 * pct) / 100;
     if (marker > 7 && marker < 153)
-        lcd.fillRectangle(marker, 34, 2, 10, color);
+        lcd.fillRectangle(marker, 41, 2, 10, color);
 }
 
 static void drawStatus(Nokia105& lcd, const char* a, const char* b, const char* c,
@@ -86,13 +86,13 @@ static void drawStatus(Nokia105& lcd, const char* a, const char* b, const char* 
     const int y = 112;
     const int h = 13;
 
-    lcd.fillRectangle(3,   y, 48, h, aOk ? GREEN : DARKGREY);
-    lcd.fillRectangle(56,  y, 48, h, bOk ? GREEN : DARKGREY);
-    lcd.fillRectangle(109, y, 48, h, cOk ? GREEN : DARKGREY);
+    lcd.fillRectangle(3,   y, 44, h, aOk ? GREEN : DARKGREY);
+    lcd.fillRectangle(50,  y, 60, h, bOk ? GREEN : DARKGREY);
+    lcd.fillRectangle(114, y, 43, h, cOk ? GREEN : DARKGREY);
 
-    lcd.printString(a, 7,   y + 1, aOk ? BLACK : LIGHTGREY, aOk ? GREEN : DARKGREY);
-    lcd.printString(b, 60,  y + 1, bOk ? BLACK : LIGHTGREY, bOk ? GREEN : DARKGREY);
-    lcd.printString(c, 113, y + 1, cOk ? BLACK : LIGHTGREY, cOk ? GREEN : DARKGREY);
+    lcd.printString(a, 5,   y + 1, aOk ? BLACK : LIGHTGREY, aOk ? GREEN : DARKGREY);
+    lcd.printString(b, 52,  y + 1, bOk ? BLACK : LIGHTGREY, bOk ? GREEN : DARKGREY);
+    lcd.printString(c, 116, y + 1, cOk ? BLACK : LIGHTGREY, cOk ? GREEN : DARKGREY);
 }
 
 // ============================================================
