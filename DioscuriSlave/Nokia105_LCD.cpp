@@ -163,7 +163,8 @@ void Nokia105::initDisplaySoft() {
   delay(120);
   writeCmd(NOKIA105_COLMOD);
   writeData(0x05);
-  setRotation(0);
+  // Nokia 105 native landscape: MV=1 / MADCTL 0x68.
+  setRotation(1);
   writeCmd(NOKIA105_NORON);
   delay(10);
   displayOn();
