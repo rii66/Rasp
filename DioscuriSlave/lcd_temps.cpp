@@ -19,6 +19,82 @@ static int lastAirCt = -999, lastAirTt = -999, lastFan = -999, lastAirPower = -9
 static bool lastAirOn = false;
 static const char* lastAirMode = nullptr;
 
+
+/* ===== Dashboard typography: compact labels + bold 3x7 digits ===== */
+static const uint8_t bigDigitFont[10][7] = {
+    {0x1F,0x11,0x13,0x15,0x19,0x11,0x1F},
+    {0x04,0x0C,0x04,0x04,0x04,0x04,0x0E},
+    {0x1E,0x01,0x01,0x1E,0x10,0x10,0x1F},
+    {0x1E,0x01,0x01,0x0E,0x01,0x01,0x1E},
+    {0x12,0x12,0x12,0x1F,0x02,0x02,0x02},
+    {0x1F,0x10,0x10,0x1E,0x01,0x01,0x1E},
+    {0x0E,0x10,0x10,0x1E,0x11,0x11,0x0E},
+    {0x1F,0x01,0x02,0x04,0x08,0x08,0x08},
+    {0x0E,0x11,0x11,0x0E,0x11,0x11,0x0E},
+    {0x0E,0x11,0x11,0x0F,0x01,0x01,0x0E}
+};
+
+static void drawBigDigit(Nokia105& lcd, uint8_t digit, int16_t x, int16_t y,
+                         uint16_t fg, uint16_t bg) {
+    if (digit > 9) return;
+    lcd.fillRectangle(x, y, 16, 23, bg);
+
+    const uint8_t scale = 3;
+    for (uint8_t row = 0; row < 7; row++) {
+        uint8_t bits = bigDigitFont[digit][row];
+        uint8_t col = 0;
+        while (col < 5) {
+            if (!(bits & (1 << (4 - col)))) {
+                col++;
+                continue;
+            }
+            uint8_t start = col;
+            while (col < 5 && (bits & (1 << (4 - col)))) col++;
+            lcd.fillRectangle(x + start * scale, y + row * scale,
+                              (col - start) * scale, scale, fg);
+        }
+    }
+}
+
+static void drawBigTemp(Nokia105& lcd, int value, int16_t x, int16_t y,
+                        uint16_t fg) {
+    if (value < 0) value = 0;
+    if (value > 999) value = 999;
+
+    char b[4];
+    snprintf(b, sizeof(b), "%03d", value);
+
+    lcd.fillRectangle(x, y, 56, 28, BLACK);
+
+    drawBigDigit(lcd, b[0] - '0', x,      y, fg, BLACK);
+    drawBigDigit(lcd, b[1] - '0', x + 18, y, fg, BLACK);
+    drawBigDigit(lcd, b[2] - '0', x + 36, y, fg, BLACK);
+
+    /* degree symbol */
+    lcd.fillRectangle(x + 52, y + 1, 7, 3, fg);
+    lcd.fillRectangle(x + 52, y + 4, 3, 3, fg);
+    lcd.fillRectangle(x + 56, y + 4, 3, 3, fg);
+    lcd.fillRectangle(x + 52, y + 7, 7, 3, fg);
+}
+
+static void drawPwmBar(Nokia105& lcd, int pwm) {
+    if (pwm < 0) pwm = 0;
+    if (pwm > 255) pwm = 255;
+
+    const int x = 112;
+    const int y = 30;
+    const int w = 10;
+    const int h = 112;
+
+    lcd.fillRectangle(x, y, w, h, DARKGREY);
+
+    int filled = (pwm * h) / 255;
+    if (filled > 0)
+        lcd.fillRectangle(x, y + h - filled, w, filled, CYAN);
+
+    lcd.printString("PWM", 108, 146, LIGHTGREY, BLACK);
+}
+
 static void drawSolderScreen(bool force) {
     const int ct = currentTemp;
     const int tt = targetTemp;
@@ -32,33 +108,27 @@ static void drawSolderScreen(bool force) {
     lastTipErr = tipError; lastSleep = sleeping; lastBoost = boostMode;
 
     lcdSolder.printString("SOLDER", 4, 2, CYAN, BLACK);
-    lcdSolder.lineHorizontal(0, 20, 160, DARKGREY);
-    lcdSolder.printString("ACT", 4, 27, LIGHTGREY, BLACK);
-    lcdSolder.printDigit(ct < 0 ? 0 : (unsigned)ct, 30, 25, WHITE, BLACK);
-    lcdSolder.printString("C", 88, 25, WHITE, BLACK);
-    lcdSolder.printString("SET", 4, 51, LIGHTGREY, BLACK);
-    lcdSolder.printDigit(tt < 0 ? 0 : (unsigned)tt, 30, 49, GREEN, BLACK);
-    lcdSolder.printString("C", 88, 49, GREEN, BLACK);
 
-    if (tipError) lcdSolder.printString("NO TIP", 105, 27, RED, BLACK);
-    else if (sleeping) lcdSolder.printString("SLEEP", 105, 27, BLUE, BLACK);
-    else if (boostMode) lcdSolder.printString("BOOST", 105, 27, YELLOW, BLACK);
-    else lcdSolder.printString(pwm > 0 ? "ON" : "OFF", 105, 27, pwm > 0 ? GREEN : DARKGREY, BLACK);
+    const char* status = tipError ? "ERROR" :
+                         sleeping ? "SLEEP" :
+                         boostMode ? "BOOST" :
+                         (pwm > 0 ? "ON" : "OFF");
+    lcdSolder.printString("STATUS", 60, 2, LIGHTGREY, BLACK);
+    lcdSolder.printString(status, 102, 2, tipError ? RED : WHITE, BLACK);
 
-    char buf[16];
-    snprintf(buf, sizeof(buf), "PWM %d%%", (pwm * 100) / 255);
-    lcdSolder.printString(buf, 4, 77, CYAN, BLACK);
-    lcdSolder.lineHorizontal(4, 101, 152, DARKGREY);
-    lcdSolder.printString("TIP", 4, 105, LIGHTGREY, BLACK);
+    lcdSolder.printString("TEMP", 4, 25, LIGHTGREY, BLACK);
+    drawBigTemp(lcdSolder, ct, 4, 38, WHITE);
 
-    if (tipError) lcdSolder.printString("ERROR", 38, 105, RED, BLACK);
-    else {
-        switch (currentTipMode) {
-            case 0: lcdSolder.printString("T12", 38, 105, WHITE, BLACK); break;
-            case 1: lcdSolder.printString("C210", 38, 105, WHITE, BLACK); break;
-            default: lcdSolder.printString("CUSTOM", 38, 105, WHITE, BLACK); break;
-        }
-    }
+    lcdSolder.printString("SET", 4, 72, LIGHTGREY, BLACK);
+    drawBigTemp(lcdSolder, tt, 4, 85, GREEN);
+
+    drawPwmBar(lcdSolder, pwm);
+
+    lcdSolder.printString(boostMode ? "BOOST" :
+                         sleeping ? "SLEEP" :
+                         tipError ? "NO TIP" : "READY",
+                         4, 130,
+                         tipError ? RED : (boostMode ? YELLOW : LIGHTGREY), BLACK);
 }
 
 static void drawHotAirScreen(bool force) {
@@ -76,22 +146,20 @@ static void drawHotAirScreen(bool force) {
     lastAirOn = on; lastAirMode = mode;
 
     lcdHotAir.printString("HOT AIR", 4, 2, MAGENTA, BLACK);
-    lcdHotAir.lineHorizontal(0, 20, 160, DARKGREY);
-    lcdHotAir.printString("ACT", 4, 27, LIGHTGREY, BLACK);
-    lcdHotAir.printDigit(ct < 0 ? 0 : (unsigned)ct, 30, 25, WHITE, BLACK);
-    lcdHotAir.printString("C", 88, 25, WHITE, BLACK);
-    lcdHotAir.printString("SET", 4, 51, LIGHTGREY, BLACK);
-    lcdHotAir.printDigit(tt < 0 ? 0 : (unsigned)tt, 30, 49, GREEN, BLACK);
-    lcdHotAir.printString("C", 88, 49, GREEN, BLACK);
-    lcdHotAir.printString(mode, 105, 27, on ? GREEN : DARKGREY, BLACK);
+    lcdHotAir.printString("STATUS", 60, 2, LIGHTGREY, BLACK);
+    lcdHotAir.printString(mode, 102, 2, on ? GREEN : DARKGREY, BLACK);
 
-    char buf[16];
-    snprintf(buf, sizeof(buf), "POWER %d%%", power);
-    lcdHotAir.printString(buf, 4, 77, YELLOW, BLACK);
-    snprintf(buf, sizeof(buf), "FAN %d%%", (fan * 100) / 255);
-    lcdHotAir.printString(buf, 4, 93, CYAN, BLACK);
-    lcdHotAir.lineHorizontal(4, 117, 152, DARKGREY);
-    lcdHotAir.printString(on ? "HEATER ON" : "HEATER OFF", 4, 121, on ? GREEN : DARKGREY, BLACK);
+    lcdHotAir.printString("TEMP", 4, 25, LIGHTGREY, BLACK);
+    drawBigTemp(lcdHotAir, ct, 4, 38, WHITE);
+
+    lcdHotAir.printString("SET", 4, 72, LIGHTGREY, BLACK);
+    drawBigTemp(lcdHotAir, tt, 4, 85, GREEN);
+
+    drawPwmBar(lcdHotAir, fan);
+
+    char buf[12];
+    snprintf(buf, sizeof(buf), "PWR %d%%", power);
+    lcdHotAir.printString(buf, 4, 130, on ? GREEN : DARKGREY, BLACK);
 }
 
 static void forceLcdCsHigh() {
