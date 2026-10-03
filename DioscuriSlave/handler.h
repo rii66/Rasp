@@ -11,6 +11,9 @@ void handleAirEncoder(int delta);
 void handleAirButton();
 void updateAirFanFromPot();
 
+uint16_t airGetFanPotRaw();
+uint8_t  airGetFanPotPercent();
+
 void airSetTemp(uint16_t celsius);
 void airSetFan(uint8_t speed);
 void airSwitchPower(bool on);
