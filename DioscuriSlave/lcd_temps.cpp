@@ -43,7 +43,8 @@ static void drawGauge(Nokia105& lcd, int16_t cx, int16_t cy, int16_t r,
 
 static void drawTop(Nokia105& lcd, const char* title, const char* mode, uint16_t titleColor)
 {
-    lcd.fillRectangle(0, 0, 160, 128, BLACK);
+    // Clear only header; full-screen clear causes visible blinking.
+    lcd.fillRectangle(0, 0, 160, 17, BLACK);
 
     lcd.printString(title, 5, 1, titleColor, BLACK);
 
@@ -55,6 +56,9 @@ static void drawTop(Nokia105& lcd, const char* title, const char* mode, uint16_t
 
 static void drawTempGraph(Nokia105& lcd, int ct, int tt, uint16_t color)
 {
+    // Clear graph area only; do not blank the whole LCD every update.
+    lcd.fillRectangle(4, 18, 152, 37, BLACK);
+
     lcd.lineHorizontal(5, 34, 150, DARKGREY);
     lcd.lineHorizontal(5, 40, 150, DARKGREY);
     lcd.lineHorizontal(5, 46, 150, DARKGREY);
