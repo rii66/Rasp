@@ -92,7 +92,6 @@ static void drawPwmBar(Nokia105& lcd, int pwm) {
     if (filled > 0)
         lcd.fillRectangle(x, y + h - filled, w, filled, CYAN);
 
-    lcd.printString("PWM", 108, 146, LIGHTGREY, BLACK);
 }
 
 static void drawSolderScreen(bool force) {
@@ -114,7 +113,7 @@ static void drawSolderScreen(bool force) {
                          boostMode ? "BOOST" :
                          (pwm > 0 ? "ON" : "OFF");
     lcdSolder.printString("STATUS", 60, 2, LIGHTGREY, BLACK);
-    lcdSolder.printString(status, 102, 2, tipError ? RED : WHITE, BLACK);
+    lcdSolder.printString(status, 88, 2, tipError ? RED : WHITE, BLACK);
 
     lcdSolder.printString("TEMP", 4, 25, LIGHTGREY, BLACK);
     drawBigTemp(lcdSolder, ct, 4, 38, WHITE);
@@ -147,7 +146,7 @@ static void drawHotAirScreen(bool force) {
 
     lcdHotAir.printString("HOT AIR", 4, 2, MAGENTA, BLACK);
     lcdHotAir.printString("STATUS", 60, 2, LIGHTGREY, BLACK);
-    lcdHotAir.printString(mode, 102, 2, on ? GREEN : DARKGREY, BLACK);
+    lcdHotAir.printString(mode, 88, 2, on ? GREEN : DARKGREY, BLACK);
 
     lcdHotAir.printString("TEMP", 4, 25, LIGHTGREY, BLACK);
     drawBigTemp(lcdHotAir, ct, 4, 38, WHITE);
