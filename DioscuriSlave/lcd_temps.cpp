@@ -4,7 +4,6 @@
 #include "handler.h"
 #include "Nokia105_LCD.h"
 
-// LCD1 = SOLDER, LCD2 = HOT AIR
 static Nokia105 lcdSolder(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS1);
 static Nokia105 lcdHotAir(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS2);
 
@@ -21,44 +20,83 @@ static bool lastAirOn = false;
 static const char* lastAirMode = nullptr;
 
 // ============================================================
-// Helper
+// Helpers - 160x128 landscape
 // ============================================================
 static void drawGauge(Nokia105& lcd, int16_t cx, int16_t cy, int16_t r,
                       const char* label, int value, const char* unit,
-                      uint16_t ringColor, uint16_t textColor)
+                      uint16_t ringColor)
 {
     lcd.circle(cx, cy, r, ringColor);
-    lcd.circle(cx, cy, r - 1, ringColor);
+    lcd.circle(cx, cy, r - 2, ringColor);
 
-    int labelW = strlen(label) * 6;
-    lcd.printString(label, cx - labelW / 2, cy - r - 14, LIGHTGREY, BLACK);
+    int labelW = strlen(label) * 8;
+    lcd.printString(label, cx - labelW / 2, cy - 18, LIGHTGREY, BLACK);
 
-    char buf[8];
+    char buf[12];
     snprintf(buf, sizeof(buf), "%d", value);
-    int valW = strlen(buf) * 8;
-    lcd.printString(buf, cx - valW / 2, cy - 8, textColor, BLACK);
+    int valueW = strlen(buf) * 8;
+    lcd.printString(buf, cx - valueW / 2, cy - 2, ringColor, BLACK);
 
-    if (unit) lcd.printString(unit, cx - 4, cy + 8, textColor, BLACK);
+    int unitW = strlen(unit) * 8;
+    lcd.printString(unit, cx - unitW / 2, cy + 14, LIGHTGREY, BLACK);
 }
 
-static void drawBar(Nokia105& lcd, int16_t x, int16_t y, int16_t w, int16_t h,
-                    int percent, uint16_t fillColor)
+static void drawTop(Nokia105& lcd, const char* title, const char* mode, uint16_t titleColor)
 {
-    if (percent < 0) percent = 0;
-    if (percent > 100) percent = 100;
+    lcd.fillRectangle(0, 0, 160, 128, BLACK);
 
-    lcd.fillRectangle(x, y, w, h, DARKGREY);
-    int fw = (w * percent) / 100;
-    if (fw > 0) lcd.fillRectangle(x, y, fw, h, fillColor);
+    lcd.printString(title, 5, 1, titleColor, BLACK);
 
-    lcd.lineHorizontal(x, y, w, LIGHTGREY);
-    lcd.lineHorizontal(x, y + h - 1, w, LIGHTGREY);
-    lcd.lineVertical(x, y, h, LIGHTGREY);
-    lcd.lineVertical(x + w - 1, y, h, LIGHTGREY);
+    int modeW = strlen(mode) * 8;
+    lcd.printString(mode, 155 - modeW, 1, WHITE, BLACK);
+
+    lcd.lineHorizontal(4, 17, 152, DARKGREY);
+}
+
+static void drawTempGraph(Nokia105& lcd, int ct, int tt, uint16_t color)
+{
+    lcd.lineHorizontal(5, 31, 150, DARKGREY);
+    lcd.lineHorizontal(5, 38, 150, DARKGREY);
+    lcd.lineHorizontal(5, 45, 150, DARKGREY);
+    lcd.lineHorizontal(5, 52, 150, DARKGREY);
+    lcd.lineVertical(5, 31, 22, LIGHTGREY);
+    lcd.lineVertical(154, 31, 22, LIGHTGREY);
+    lcd.lineHorizontal(5, 52, 150, LIGHTGREY);
+
+    char buf[28];
+    snprintf(buf, sizeof(buf), "Actual:%dC Set:%dC",
+             ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
+    lcd.printString(buf, 8, 19, WHITE, BLACK);
+
+    int pct = (tt > 0) ? constrain((ct * 100) / tt, 0, 100) : 0;
+    int w = (146 * pct) / 100;
+    if (w > 0)
+        lcd.fillRectangle(7, 40, w, 6, color);
+
+    // Target line + actual marker
+    lcd.lineHorizontal(7, 36, 146, color);
+    int marker = 7 + (146 * pct) / 100;
+    if (marker > 7 && marker < 153)
+        lcd.fillRectangle(marker, 34, 2, 10, color);
+}
+
+static void drawStatus(Nokia105& lcd, const char* a, const char* b, const char* c,
+                       bool aOk, bool bOk, bool cOk)
+{
+    const int y = 112;
+    const int h = 13;
+
+    lcd.fillRectangle(3,   y, 48, h, aOk ? GREEN : DARKGREY);
+    lcd.fillRectangle(56,  y, 48, h, bOk ? GREEN : DARKGREY);
+    lcd.fillRectangle(109, y, 48, h, cOk ? GREEN : DARKGREY);
+
+    lcd.printString(a, 7,   y + 1, aOk ? BLACK : LIGHTGREY, aOk ? GREEN : DARKGREY);
+    lcd.printString(b, 60,  y + 1, bOk ? BLACK : LIGHTGREY, bOk ? GREEN : DARKGREY);
+    lcd.printString(c, 113, y + 1, cOk ? BLACK : LIGHTGREY, cOk ? GREEN : DARKGREY);
 }
 
 // ============================================================
-// SOLDER (portrait 128x160)
+// SOLDER
 // ============================================================
 static void drawSolderScreen(bool force)
 {
@@ -75,67 +113,44 @@ static void drawSolderScreen(bool force)
         currentTipMode == lastTipMode)
         return;
 
-    lastSolderCt = ct; lastSolderTt = tt; lastSolderPwm = pwm;
-    lastTipErr = tipError; lastSleep = sleeping;
-    lastBoost = boostMode; lastOver = overHeat;
+    lastSolderCt = ct;
+    lastSolderTt = tt;
+    lastSolderPwm = pwm;
+    lastTipErr = tipError;
+    lastSleep = sleeping;
+    lastBoost = boostMode;
+    lastOver = overHeat;
     lastTipMode = currentTipMode;
 
-    lcdSolder.fillRectangle(0, 0, 128, 160, BLACK);
-
-    lcdSolder.printString("SOLDER", 4, 4, CYAN, BLACK);
-
     const char* tipName = "T12";
-    if (tipError)              tipName = "ERR";
-    else if (currentTipMode == 1) tipName = "C210";
-    else if (currentTipMode >= 2) tipName = "CUST";
-    lcdSolder.printString(tipName, 90, 4, WHITE, BLACK);
+    if (tipError)                  tipName = "ERR";
+    else if (currentTipMode == 1)  tipName = "C210";
+    else if (currentTipMode >= 2)  tipName = "CUST";
 
-    lcdSolder.lineHorizontal(0, 20, 128, DARKGREY);
+    drawTop(lcdSolder, "SOLDER", tipName, ORANGE);
+    drawTempGraph(lcdSolder, ct, tt, ORANGE);
 
-    char buf[28];
-    snprintf(buf, sizeof(buf), "A:%d  S:%d", ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
-    lcdSolder.printString(buf, 4, 26, WHITE, BLACK);
+    drawGauge(lcdSolder, 47, 84, 26, "TEMP",
+              ct < 0 ? 0 : ct, "C", ORANGE);
 
-    int tempPct = (tt > 0) ? constrain((ct * 100) / tt, 0, 100) : 0;
-    drawBar(lcdSolder, 4, 44, 120, 8, tempPct, ORANGE);
+    drawGauge(lcdSolder, 113, 84, 26, "POWER",
+              pwmPct, "%", CYAN);
 
-    drawGauge(lcdSolder, 34, 85, 22, "TEMP", ct < 0 ? 0 : ct, "C", ORANGE, ORANGE);
-    drawGauge(lcdSolder, 94, 85, 22, "LIFE", pwmPct, "%", CYAN, CYAN);
+    const bool ironOn = (pwm > 0 && !tipError && !sleeping && !overHeat);
+    const bool readyOk = !tipError && !overHeat;
+    const bool airUnused = true;
 
-    lcdSolder.lineHorizontal(0, 120, 128, DARKGREY);
-
-    lcdSolder.fillRectangle(4, 126, 36, 12, GREEN);
-    lcdSolder.printString("READY", 7, 128, BLACK, GREEN);
-
-    bool ironOn = (pwm > 0 && !tipError && !sleeping && !overHeat);
-    if (ironOn) {
-        lcdSolder.fillRectangle(44, 126, 36, 12, GREEN);
-        lcdSolder.printString("IRON", 50, 128, BLACK, GREEN);
-    } else {
-        lcdSolder.fillRectangle(44, 126, 36, 12, DARKGREY);
-        lcdSolder.printString("OFF", 52, 128, LIGHTGREY, DARKGREY);
-    }
-
-    if (tipError) {
-        lcdSolder.fillRectangle(84, 126, 40, 12, RED);
-        lcdSolder.printString("NOTIP", 88, 128, WHITE, RED);
-    } else if (overHeat) {
-        lcdSolder.fillRectangle(84, 126, 40, 12, RED);
-        lcdSolder.printString("OVRHT", 88, 128, WHITE, RED);
-    } else if (sleeping) {
-        lcdSolder.fillRectangle(84, 126, 40, 12, BLUE);
-        lcdSolder.printString("SLEEP", 88, 128, WHITE, BLUE);
-    } else if (boostMode) {
-        lcdSolder.fillRectangle(84, 126, 40, 12, YELLOW);
-        lcdSolder.printString("BOOST", 88, 128, BLACK, YELLOW);
-    } else {
-        lcdSolder.fillRectangle(84, 126, 40, 12, DARKGREY);
-        lcdSolder.printString("---", 96, 128, LIGHTGREY, DARKGREY);
-    }
+    drawStatus(lcdSolder,
+               "READY",
+               ironOn ? "HEAT ON" : "HEAT OFF",
+               boostMode ? "BOOST" : (sleeping ? "SLEEP" : "POWER"),
+               readyOk,
+               ironOn,
+               airUnused);
 }
 
 // ============================================================
-// HOT AIR (portrait 128x160)
+// HOT AIR
 // ============================================================
 static void drawHotAirScreen(bool force)
 {
@@ -147,48 +162,35 @@ static void drawHotAirScreen(bool force)
     const char* mode = airGetModeStr();
     const int fanPct = constrain((fan * 100) / 255, 0, 100);
 
-    if (!force && ct == lastAirCt && tt == lastAirTt && fan == lastFan &&
+    if (!force &&
+        ct == lastAirCt && tt == lastAirTt && fan == lastFan &&
         power == lastAirPower && on == lastAirOn && mode == lastAirMode)
         return;
 
-    lastAirCt = ct; lastAirTt = tt; lastFan = fan; lastAirPower = power;
-    lastAirOn = on; lastAirMode = mode;
+    lastAirCt = ct;
+    lastAirTt = tt;
+    lastFan = fan;
+    lastAirPower = power;
+    lastAirOn = on;
+    lastAirMode = mode;
 
-    lcdHotAir.fillRectangle(0, 0, 128, 160, BLACK);
+    drawTop(lcdHotAir, "HOT AIR", mode ? mode : "AIR", MAGENTA);
+    drawTempGraph(lcdHotAir, ct, tt, MAGENTA);
 
-    lcdHotAir.printString("HOT AIR", 28, 4, MAGENTA, BLACK);
-    lcdHotAir.lineHorizontal(0, 20, 128, DARKGREY);
+    drawGauge(lcdHotAir, 47, 84, 26, "TEMP",
+              ct < 0 ? 0 : ct, "C", ORANGE);
 
-    char buf[28];
-    snprintf(buf, sizeof(buf), "A:%d  S:%d", ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
-    lcdHotAir.printString(buf, 4, 26, WHITE, BLACK);
+    drawGauge(lcdHotAir, 113, 84, 26, "AIRFLOW",
+              fanPct, "%", CYAN);
 
-    int tempPct = (tt > 0) ? constrain((ct * 100) / tt, 0, 100) : 0;
-    drawBar(lcdHotAir, 4, 44, 120, 8, tempPct, ORANGE);
-
-    drawGauge(lcdHotAir, 34, 85, 22, "TEMP", ct < 0 ? 0 : ct, "C", ORANGE, ORANGE);
-    drawGauge(lcdHotAir, 94, 85, 22, "AIR", fanPct, "%", CYAN, CYAN);
-
-    lcdHotAir.lineHorizontal(0, 120, 128, DARKGREY);
-
-    lcdHotAir.fillRectangle(4, 126, 36, 12, GREEN);
-    lcdHotAir.printString("READY", 7, 128, BLACK, GREEN);
-
-    if (on) {
-        lcdHotAir.fillRectangle(44, 126, 36, 12, GREEN);
-        lcdHotAir.printString("HEAT", 50, 128, BLACK, GREEN);
-    } else {
-        lcdHotAir.fillRectangle(44, 126, 36, 12, DARKGREY);
-        lcdHotAir.printString("OFF", 52, 128, LIGHTGREY, DARKGREY);
-    }
-
-    if (fanPct > 5) {
-        lcdHotAir.fillRectangle(84, 126, 40, 12, CYAN);
-        lcdHotAir.printString("AIROK", 88, 128, BLACK, CYAN);
-    } else {
-        lcdHotAir.fillRectangle(84, 126, 40, 12, DARKGREY);
-        lcdHotAir.printString("FAN0", 92, 128, LIGHTGREY, DARKGREY);
-    }
+    const bool fanOk = fanPct > 5;
+    drawStatus(lcdHotAir,
+               "READY",
+               on ? "HEAT ON" : "HEAT OFF",
+               fanOk ? "AIR OK" : "FAN 0",
+               true,
+               on,
+               fanOk);
 }
 
 // ============================================================
@@ -222,7 +224,7 @@ void initLcdTemps()
     lcdHotAir.initDisplaySoft();
     forceLcdCsHigh();
 
-    // Portrait only — driver belum siap landscape
+    // Landscape 160x128
     ready = true;
     lastDraw = 0;
 
@@ -247,7 +249,9 @@ void updateLcdTemps()
 {
     if (!ready) return;
     if (millis() - lastDraw < DRAW_MS) return;
+
     lastDraw = millis();
+
     drawSolderScreen(false);
     drawHotAirScreen(false);
 }
