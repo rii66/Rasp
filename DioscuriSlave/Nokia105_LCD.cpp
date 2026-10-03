@@ -135,13 +135,8 @@ void Nokia105::invertDisplay(bool invert) {
   writeCmd(invert ? NOKIA105_INVON : NOKIA105_INVOFF);
 }
 
-static inline int16_t logicalWidth(uint8_t rotation) {
-  return (rotation & 1) ? HEIGHT : WIDTH;
-}
-
-static inline int16_t logicalHeight(uint8_t rotation) {
-  return (rotation & 1) ? WIDTH : HEIGHT;
-}
+static inline int16_t logicalWidth(uint8_t)  { return WIDTH; }
+static inline int16_t logicalHeight(uint8_t) { return HEIGHT; }
 
 void Nokia105::setRotation(uint8_t r) {
   _rotation = r & 3;
@@ -168,7 +163,7 @@ void Nokia105::initDisplaySoft() {
   delay(120);
   writeCmd(NOKIA105_COLMOD);
   writeData(0x05);
-  setRotation(1);
+  setRotation(0);
   writeCmd(NOKIA105_NORON);
   delay(10);
   displayOn();
