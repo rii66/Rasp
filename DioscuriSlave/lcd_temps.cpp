@@ -3,6 +3,7 @@
 #include "GlobalState.h"
 #include "handler.h"
 #include "Nokia105_LCD.h"
+#include <string.h>
 
 static Nokia105 lcdSolder(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS1);
 static Nokia105 lcdHotAir(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS2);
@@ -17,7 +18,7 @@ static uint8_t lastTipMode = 255;
 
 static int  lastAirCt = -999, lastAirTt = -999, lastFan = -999, lastAirPower = -999;
 static bool lastAirOn = false;
-static const char* lastAirMode = nullptr;
+static char lastAirMode[16] = "";
 
 // ============================================================
 // Helpers - 160x128 landscape
@@ -168,7 +169,8 @@ static void drawHotAirScreen(bool force)
 
     if (!force &&
         ct == lastAirCt && tt == lastAirTt && fan == lastFan &&
-        power == lastAirPower && on == lastAirOn && mode == lastAirMode)
+        power == lastAirPower && on == lastAirOn && 
+        strcmp(lastAirMode, (mode ? mode : "")) == 0)
         return;
 
     lastAirCt = ct;
@@ -176,7 +178,9 @@ static void drawHotAirScreen(bool force)
     lastFan = fan;
     lastAirPower = power;
     lastAirOn = on;
-    lastAirMode = mode;
+    // Simpan mode string, bukan pointer
+    strncpy(lastAirMode, (mode ? mode : ""), sizeof(lastAirMode) - 1);
+    lastAirMode[sizeof(lastAirMode) - 1] = '\0';
 
     drawTop(lcdHotAir, "HOT AIR", mode ? mode : "AIR", MAGENTA);
     drawTempGraph(lcdHotAir, ct, tt, MAGENTA);
@@ -246,7 +250,7 @@ void initLcdTemps()
     lastFan = -999;
     lastAirPower = -999;
     lastAirOn = false;
-    lastAirMode = nullptr;
+    lastAirMode[0] = '\0';
 }
 
 void updateLcdTemps()
