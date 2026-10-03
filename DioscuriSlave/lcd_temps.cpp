@@ -114,22 +114,30 @@ static void drawPwmBar(Nokia105& lcd, int pwm) {
     if (pwm < 0) pwm = 0;
     if (pwm > 255) pwm = 255;
 
-    const int x = 112;
+    // Discrete vertical bar like battery / Wi-Fi indicator.
+    const int x = 114;
     const int y = 30;
     const int w = 10;
-    const int h = 112;
+    const int segH = 11;
+    const int gap = 3;
+    const int segs = 8;
 
-    lcd.fillRectangle(x, y, w, h, DARKGREY);
+    int level = (pwm * segs + 254) / 255;
+    if (level > segs) level = segs;
 
-    int filled = (pwm * h) / 255;
-    for (int i = 0; i < filled; i++) {
-        int level = (i * 255) / (h - 1);
-        lcd.fillRectangle(x, y + h - 1 - i, w, 1, pwmColor(level));
+    for (int i = 0; i < segs; i++) {
+        const int sy = y + (segs - 1 - i) * (segH + gap);
+        if (i < level) {
+            int colorLevel = (i * 255) / (segs - 1);
+            lcd.fillRectangle(x, sy, w, segH, pwmColor(colorLevel));
+        } else {
+            lcd.fillRectangle(x, sy, w, segH, DARKGREY);
+        }
     }
 
     char buf[8];
     snprintf(buf, sizeof(buf), "%d%%", (pwm * 100) / 255);
-    lcd.printString(buf, 82, 146, LIGHTGREY, BLACK);
+    lcd.printString(buf, 104, 136, LIGHTGREY, BLACK);
 }
 
 static void drawSolderScreen(bool force) {
@@ -157,15 +165,19 @@ static void drawSolderScreen(bool force) {
                           boostMode ? YELLOW :
                           (pwm > 0 ? GREEN : DARKGREY), BLACK);
 
-    lcdSolder.printString("TEMP", 6, 25, LIGHTGREY, BLACK);
+    // Current temperature: only this value is large.
     drawTempPanel(lcdSolder, ct, 20, CYAN, WHITE);
+    lcdSolder.printString("TEMP", 6, 22, LIGHTGREY, BLACK);
+    drawBigTemp(lcdSolder, ct, 6, 34, WHITE);
 
-    lcdSolder.printString("SET", 6, 72, LIGHTGREY, BLACK);
+    // Set temperature: compact label + normal-size value.
     drawTempPanel(lcdSolder, tt, 69, GREEN, GREEN);
+    lcdSolder.printString("SET", 6, 72, LIGHTGREY, BLACK);
+    lcdSolder.printDigit(tt, 6, 87, GREEN, BLACK);
 
     drawPwmBar(lcdSolder, pwm);
 
-    // Explicit tip state: never hidden behind the status text.
+    // Bottom status / tip state.
     lcdSolder.printString(tipError ? "NO TIP" :
                          boostMode ? "BOOST" :
                          sleeping ? "SLEEP" : "TIP OK",
@@ -191,11 +203,15 @@ static void drawHotAirScreen(bool force) {
     lcdHotAir.printString("STAT", 58, 2, LIGHTGREY, BLACK);
     lcdHotAir.printString(mode, 90, 2, on ? GREEN : DARKGREY, BLACK);
 
-    lcdHotAir.printString("TEMP", 6, 25, LIGHTGREY, BLACK);
+    // Current temperature: only this value is large.
     drawTempPanel(lcdHotAir, ct, 20, CYAN, WHITE);
+    lcdHotAir.printString("TEMP", 6, 22, LIGHTGREY, BLACK);
+    drawBigTemp(lcdHotAir, ct, 6, 34, WHITE);
 
-    lcdHotAir.printString("SET", 6, 72, LIGHTGREY, BLACK);
+    // Set temperature: compact label + normal-size value.
     drawTempPanel(lcdHotAir, tt, 69, GREEN, GREEN);
+    lcdHotAir.printString("SET", 6, 72, LIGHTGREY, BLACK);
+    lcdHotAir.printDigit(tt, 6, 87, GREEN, BLACK);
 
     drawPwmBar(lcdHotAir, fan);
 
