@@ -1,3 +1,16 @@
+#ifndef HOTGUN_H
+#define HOTGUN_H
+
+#include <Arduino.h>
+#include "platform_compat.h"
+#include "config.h"
+#include "ZeroCross.h"
+#include "fan.h"
+#include "AirTemp.h"
+#include "AirPid.h"
+#include "AirCal.h"
+#include "storage.h"
+
 class HotGun {
 public:
   enum Mode {
@@ -178,3 +191,5 @@ private:
   uint32_t        last_update;
   bool            over_heat = false;
 };
+
+#endif
