@@ -181,23 +181,8 @@ void Nokia105::setDrawPosition(unsigned char x, unsigned char y) {
 }
 
 void Nokia105::setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
-  uint8_t t0, t1;
-  switch (_rotation) {
-    case 1:
-      t0 = WIDTH - 1 - y1; t1 = WIDTH - 1 - y0;
-      y0 = x0; x0 = t0; y1 = x1; x1 = t1;
-      break;
-    case 2:
-      t0 = x0; x0 = WIDTH - 1 - x1; x1 = WIDTH - 1 - t0;
-      t0 = y0; y0 = HEIGHT - 1 - y1; y1 = HEIGHT - 1 - t0;
-      break;
-    case 3:
-      t0 = HEIGHT - 1 - x1; t1 = HEIGHT - 1 - x0;
-      x0 = y0; y0 = t0; x1 = y1; y1 = t1;
-      break;
-    default: break;
-  }
-
+  // MADCTL handles the physical rotation.
+  // Do NOT rotate coordinates here as well (double rotation).
   writeCmd(NOKIA105_CASET);
   writeData(0);
   writeData(x0 + NOKIA105_X_OFFSET);
@@ -212,7 +197,6 @@ void Nokia105::setDrawPositionAxis(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y
 
   writeCmd(NOKIA105_RAMWR);
 }
-
 void Nokia105::drawPixel(int16_t x, int16_t y, uint16_t color) {
   const int16_t w = logicalWidth(_rotation);
   const int16_t h = logicalHeight(_rotation);
