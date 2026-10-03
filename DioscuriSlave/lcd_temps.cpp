@@ -77,6 +77,23 @@ static void drawBigTemp(Nokia105& lcd, int value, int16_t x, int16_t y,
     lcd.fillRectangle(x + 52, y + 7, 7, 3, fg);
 }
 
+static uint16_t pwmColor(int pwm) {
+    // 0% = green, 50% = yellow, 100% = red
+    if (pwm < 0) pwm = 0;
+    if (pwm > 255) pwm = 255;
+
+    uint8_t r, g;
+    if (pwm <= 128) {
+        r = (uint8_t)((pwm * 255L) / 128);
+        g = 255;
+    } else {
+        r = 255;
+        g = (uint8_t)(((255 - pwm) * 255L) / 127);
+    }
+
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3);
+}
+
 static void drawPwmBar(Nokia105& lcd, int pwm) {
     if (pwm < 0) pwm = 0;
     if (pwm > 255) pwm = 255;
@@ -86,12 +103,19 @@ static void drawPwmBar(Nokia105& lcd, int pwm) {
     const int w = 10;
     const int h = 112;
 
+    // Empty track
     lcd.fillRectangle(x, y, w, h, DARKGREY);
 
+    // Full-color level: green -> yellow -> red, bottom to top.
     int filled = (pwm * h) / 255;
-    if (filled > 0)
-        lcd.fillRectangle(x, y + h - filled, w, filled, CYAN);
+    for (int i = 0; i < filled; i++) {
+        int level = (i * 255) / (h - 1);
+        lcd.fillRectangle(x, y + h - 1 - i, w, 1, pwmColor(level));
+    }
 
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%d%%", (pwm * 100) / 255);
+    lcd.printString(buf, 82, 146, LIGHTGREY, BLACK);
 }
 
 static void drawSolderScreen(bool force) {
