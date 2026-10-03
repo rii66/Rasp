@@ -51,11 +51,7 @@ inline void monitorRuntime() {
         lastBoost = boostMode;
         lastTipError = tipError;
 
-        int pot = analogRead(PIN_POT_FAN);
-        pot = constrain(pot, 0, 4095);
-        int speed = map(pot, 0, 4095, 0, 255);
-        if (speed < FAN_MIN_SPEED / 2) speed = 0;
-        int potPercent = (speed * 100 + 127) / 255;
+        const int potPercent = airGetFanPotPercent();
         lastPotBucket = ((potPercent + 2) / 5) * 5;
 
         Serial.print(F("[STATION] "));
@@ -107,12 +103,9 @@ inline void monitorRuntime() {
         Serial.println(airMode);
     }
 
-    int pot = analogRead(PIN_POT_FAN);
-    pot = constrain(pot, 0, 4095);
-    int speed = map(pot, 0, 4095, 0, 255);
-    if (speed < FAN_MIN_SPEED / 2) speed = 0;
-
-    int potPercent = (speed * 100 + 127) / 255;
+    // FAN POT is sampled only by updateAirFanFromPot().
+    // Here we read the cached/filtered value, never the ADC directly.
+    const int potPercent = airGetFanPotPercent();
     int potBucket = ((potPercent + 2) / 5) * 5;
     if (potBucket > 100) potBucket = 100;
 
