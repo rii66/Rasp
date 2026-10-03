@@ -31,7 +31,7 @@ static void drawGauge(Nokia105& lcd, int16_t cx, int16_t cy, int16_t r,
     lcd.circle(cx, cy, r - 2, ringColor);
 
     int labelW = strlen(label) * 8;
-    lcd.printString(label, cx - labelW / 2, cy - 18, LIGHTGREY, BLACK);
+    lcd.printString(label, cx - labelW / 2, cy - 16, LIGHTGREY, BLACK);
 
     char buf[12];
     snprintf(buf, sizeof(buf), "%d", value);
@@ -45,44 +45,44 @@ static void drawGauge(Nokia105& lcd, int16_t cx, int16_t cy, int16_t r,
 static void drawTop(Nokia105& lcd, const char* title, const char* mode, uint16_t titleColor)
 {
     // Clear only header; full-screen clear causes visible blinking.
-    lcd.fillRectangle(0, 0, 160, 17, BLACK);
+    lcd.fillRectangle(0, 0, 160, 16, BLACK);
 
-    lcd.printString(title, 5, 1, titleColor, BLACK);
+    lcd.printString(title, 4, 0, titleColor, BLACK);
 
     int modeW = strlen(mode) * 8;
-    lcd.printString(mode, 155 - modeW, 1, WHITE, BLACK);
+    lcd.printString(mode, 156 - modeW, 0, WHITE, BLACK);
 
-    lcd.lineHorizontal(4, 17, 152, DARKGREY);
+    lcd.lineHorizontal(4, 16, 152, DARKGREY);
 }
 
 static void drawTempGraph(Nokia105& lcd, int ct, int tt, uint16_t color)
 {
     // Clear graph area only; do not blank the whole LCD every update.
-    lcd.fillRectangle(4, 18, 152, 37, BLACK);
+    lcd.fillRectangle(4, 17, 152, 38, BLACK);
 
-    lcd.lineHorizontal(5, 34, 150, DARKGREY);
-    lcd.lineHorizontal(5, 40, 150, DARKGREY);
-    lcd.lineHorizontal(5, 46, 150, DARKGREY);
-    lcd.lineHorizontal(5, 52, 150, DARKGREY);
-    lcd.lineVertical(5, 34, 19, LIGHTGREY);
-    lcd.lineVertical(154, 34, 19, LIGHTGREY);
-    lcd.lineHorizontal(5, 52, 150, LIGHTGREY);
+    lcd.lineHorizontal(5, 35, 150, DARKGREY);
+    lcd.lineHorizontal(5, 41, 150, DARKGREY);
+    lcd.lineHorizontal(5, 47, 150, DARKGREY);
+    lcd.lineHorizontal(5, 53, 150, DARKGREY);
+    lcd.lineVertical(5, 35, 19, LIGHTGREY);
+    lcd.lineVertical(154, 35, 19, LIGHTGREY);
+    lcd.lineHorizontal(5, 53, 150, LIGHTGREY);
 
     char buf[28];
     snprintf(buf, sizeof(buf), "ACT:%dC SET:%dC",
              ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
-    lcd.printString(buf, 12, 18, WHITE, BLACK);
+    lcd.printString(buf, 8, 17, WHITE, BLACK);
 
     int pct = (tt > 0) ? constrain((ct * 100) / tt, 0, 100) : 0;
     int w = (146 * pct) / 100;
     if (w > 0)
-        lcd.fillRectangle(7, 43, w, 6, color);
+        lcd.fillRectangle(7, 44, w, 6, color);
 
     // Target line + actual marker
-    lcd.lineHorizontal(7, 40, 146, color);
+    lcd.lineHorizontal(7, 41, 146, color);
     int marker = 7 + (146 * pct) / 100;
     if (marker > 7 && marker < 153)
-        lcd.fillRectangle(marker, 41, 2, 10, color);
+        lcd.fillRectangle(marker, 42, 2, 10, color);
 }
 
 static void drawStatus(Nokia105& lcd, const char* a, const char* b, const char* c,
@@ -135,10 +135,10 @@ static void drawSolderScreen(bool force)
     drawTop(lcdSolder, "SOLDER", tipName, ORANGE);
     drawTempGraph(lcdSolder, ct, tt, ORANGE);
 
-    drawGauge(lcdSolder, 47, 84, 26, "TEMP",
+    drawGauge(lcdSolder, 47, 82, 25, "TEMP",
               ct < 0 ? 0 : ct, "C", ORANGE);
 
-    drawGauge(lcdSolder, 113, 84, 26, "POWER",
+    drawGauge(lcdSolder, 113, 82, 25, "POWER",
               pwmPct, "%", CYAN);
 
     const bool ironOn = (pwm > 0 && !tipError && !sleeping && !overHeat);
@@ -185,10 +185,10 @@ static void drawHotAirScreen(bool force)
     drawTop(lcdHotAir, "HOT AIR", mode ? mode : "AIR", MAGENTA);
     drawTempGraph(lcdHotAir, ct, tt, MAGENTA);
 
-    drawGauge(lcdHotAir, 47, 84, 26, "TEMP",
+    drawGauge(lcdHotAir, 47, 82, 25, "TEMP",
               ct < 0 ? 0 : ct, "C", ORANGE);
 
-    drawGauge(lcdHotAir, 113, 84, 26, "AIRFLOW",
+    drawGauge(lcdHotAir, 113, 82, 25, "AIRFLOW",
               fanPct, "%", CYAN);
 
     const bool fanOk = fanPct > 5;
