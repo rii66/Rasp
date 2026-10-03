@@ -77,6 +77,22 @@ static void drawBigTemp(Nokia105& lcd, int value, int16_t x, int16_t y,
     lcd.fillRectangle(x + 52, y + 7, 7, 3, fg);
 }
 
+/* ===== Temperature panels ===== */
+static void drawTempPanel(Nokia105& lcd, int value, int16_t y,
+                          uint16_t accent, uint16_t digitColor) {
+    // Full-width color accent + dark panel.
+    lcd.fillRectangle(2, y, 104, 46, DARKGREY);
+    lcd.fillRectangle(3, y + 1, 102, 44, BLACK);
+
+    // Double accent border.
+    lcd.fillRectangle(2, y, 104, 2, accent);
+    lcd.fillRectangle(2, y + 44, 104, 2, accent);
+    lcd.fillRectangle(2, y, 2, 46, accent);
+    lcd.fillRectangle(104, y, 2, 46, accent);
+
+    drawBigTemp(lcd, value, 6, y + 10, digitColor);
+}
+
 static uint16_t pwmColor(int pwm) {
     // 0% = green, 50% = yellow, 100% = red
     if (pwm < 0) pwm = 0;
@@ -103,10 +119,8 @@ static void drawPwmBar(Nokia105& lcd, int pwm) {
     const int w = 10;
     const int h = 112;
 
-    // Empty track
     lcd.fillRectangle(x, y, w, h, DARKGREY);
 
-    // Full-color level: green -> yellow -> red, bottom to top.
     int filled = (pwm * h) / 255;
     for (int i = 0; i < filled; i++) {
         int level = (i * 255) / (h - 1);
@@ -132,26 +146,31 @@ static void drawSolderScreen(bool force) {
 
     lcdSolder.printString("SOLDER", 4, 2, CYAN, BLACK);
 
+    // Compact header: STATUS no longer collides with ON/OFF/ERROR.
     const char* status = tipError ? "ERROR" :
                          sleeping ? "SLEEP" :
                          boostMode ? "BOOST" :
                          (pwm > 0 ? "ON" : "OFF");
-    lcdSolder.printString("STATUS", 60, 2, LIGHTGREY, BLACK);
-    lcdSolder.printString(status, 88, 2, tipError ? RED : WHITE, BLACK);
+    lcdSolder.printString("STAT", 58, 2, LIGHTGREY, BLACK);
+    lcdSolder.printString(status, 90, 2, tipError ? RED :
+                          sleeping ? YELLOW :
+                          boostMode ? YELLOW :
+                          (pwm > 0 ? GREEN : DARKGREY), BLACK);
 
-    lcdSolder.printString("TEMP", 4, 25, LIGHTGREY, BLACK);
-    drawBigTemp(lcdSolder, ct, 4, 38, WHITE);
+    lcdSolder.printString("TEMP", 6, 25, LIGHTGREY, BLACK);
+    drawTempPanel(lcdSolder, ct, 20, CYAN, WHITE);
 
-    lcdSolder.printString("SET", 4, 72, LIGHTGREY, BLACK);
-    drawBigTemp(lcdSolder, tt, 4, 85, GREEN);
+    lcdSolder.printString("SET", 6, 72, LIGHTGREY, BLACK);
+    drawTempPanel(lcdSolder, tt, 69, GREEN, GREEN);
 
     drawPwmBar(lcdSolder, pwm);
 
-    lcdSolder.printString(boostMode ? "BOOST" :
-                         sleeping ? "SLEEP" :
-                         tipError ? "NO TIP" : "READY",
+    // Explicit tip state: never hidden behind the status text.
+    lcdSolder.printString(tipError ? "NO TIP" :
+                         boostMode ? "BOOST" :
+                         sleeping ? "SLEEP" : "TIP OK",
                          4, 130,
-                         tipError ? RED : (boostMode ? YELLOW : LIGHTGREY), BLACK);
+                         tipError ? RED : (boostMode ? YELLOW : GREEN), BLACK);
 }
 
 static void drawHotAirScreen(bool force) {
@@ -169,14 +188,14 @@ static void drawHotAirScreen(bool force) {
     lastAirOn = on; lastAirMode = mode;
 
     lcdHotAir.printString("HOT AIR", 4, 2, MAGENTA, BLACK);
-    lcdHotAir.printString("STATUS", 60, 2, LIGHTGREY, BLACK);
-    lcdHotAir.printString(mode, 88, 2, on ? GREEN : DARKGREY, BLACK);
+    lcdHotAir.printString("STAT", 58, 2, LIGHTGREY, BLACK);
+    lcdHotAir.printString(mode, 90, 2, on ? GREEN : DARKGREY, BLACK);
 
-    lcdHotAir.printString("TEMP", 4, 25, LIGHTGREY, BLACK);
-    drawBigTemp(lcdHotAir, ct, 4, 38, WHITE);
+    lcdHotAir.printString("TEMP", 6, 25, LIGHTGREY, BLACK);
+    drawTempPanel(lcdHotAir, ct, 20, CYAN, WHITE);
 
-    lcdHotAir.printString("SET", 4, 72, LIGHTGREY, BLACK);
-    drawBigTemp(lcdHotAir, tt, 4, 85, GREEN);
+    lcdHotAir.printString("SET", 6, 72, LIGHTGREY, BLACK);
+    drawTempPanel(lcdHotAir, tt, 69, GREEN, GREEN);
 
     drawPwmBar(lcdHotAir, fan);
 
