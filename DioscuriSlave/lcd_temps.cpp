@@ -10,7 +10,7 @@ static Nokia105 lcdHotAir(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS2);
 
 static bool ready = false;
 static uint32_t lastDraw = 0;
-static const uint32_t DRAW_MS = 200;
+static const uint32_t DRAW_MS = 250;
 
 static int  lastSolderCt = -999, lastSolderTt = -999, lastSolderPwm = -999;
 static bool lastTipErr = false, lastSleep = false, lastBoost = false, lastOver = false;
@@ -21,7 +21,7 @@ static bool lastAirOn = false;
 static const char* lastAirMode = nullptr;
 
 // ============================================================
-// Helper: circular gauge
+// Helper
 // ============================================================
 static void drawGauge(Nokia105& lcd, int16_t cx, int16_t cy, int16_t r,
                       const char* label, int value, const char* unit,
@@ -31,21 +31,16 @@ static void drawGauge(Nokia105& lcd, int16_t cx, int16_t cy, int16_t r,
     lcd.circle(cx, cy, r - 1, ringColor);
 
     int labelW = strlen(label) * 6;
-    lcd.printString(label, cx - labelW / 2, cy - r - 11, LIGHTGREY, BLACK);
+    lcd.printString(label, cx - labelW / 2, cy - r - 14, LIGHTGREY, BLACK);
 
     char buf[8];
     snprintf(buf, sizeof(buf), "%d", value);
     int valW = strlen(buf) * 8;
-    lcd.printString(buf, cx - valW / 2, cy - 6, textColor, BLACK);
+    lcd.printString(buf, cx - valW / 2, cy - 8, textColor, BLACK);
 
-    if (unit) {
-        lcd.printString(unit, cx - 4, cy + 9, textColor, BLACK);
-    }
+    if (unit) lcd.printString(unit, cx - 4, cy + 8, textColor, BLACK);
 }
 
-// ============================================================
-// Helper: progress bar
-// ============================================================
 static void drawBar(Nokia105& lcd, int16_t x, int16_t y, int16_t w, int16_t h,
                     int percent, uint16_t fillColor)
 {
@@ -63,15 +58,13 @@ static void drawBar(Nokia105& lcd, int16_t x, int16_t y, int16_t w, int16_t h,
 }
 
 // ============================================================
-// SOLDER (landscape) — PWM global untuk T12 & C210
+// SOLDER (portrait 128x160)
 // ============================================================
 static void drawSolderScreen(bool force)
 {
     const int ct  = currentTemp;
     const int tt  = targetTemp;
     const int pwm = pwmOut;
-
-    // PWM % relatif ke maxPwmLimit (penting untuk C210 yang max 71)
     const int lim = (maxPwmLimit > 0) ? maxPwmLimit : 255;
     const int pwmPct = (lim > 0) ? constrain((pwm * 100) / lim, 0, 100) : 0;
 
@@ -87,74 +80,62 @@ static void drawSolderScreen(bool force)
     lastBoost = boostMode; lastOver = overHeat;
     lastTipMode = currentTipMode;
 
-    lcdSolder.fillRectangle(0, 0, 160, 128, BLACK);
+    lcdSolder.fillRectangle(0, 0, 128, 160, BLACK);
 
-    // Title + tip type
-    lcdSolder.printString("SOLDERING IRON", 8, 3, CYAN, BLACK);
+    lcdSolder.printString("SOLDER", 4, 4, CYAN, BLACK);
 
-    // Tip type di kanan title
     const char* tipName = "T12";
-    if (tipError)           tipName = "ERR";
+    if (tipError)              tipName = "ERR";
     else if (currentTipMode == 1) tipName = "C210";
     else if (currentTipMode >= 2) tipName = "CUST";
-    lcdSolder.printString(tipName, 130, 3, WHITE, BLACK);
+    lcdSolder.printString(tipName, 90, 4, WHITE, BLACK);
 
-    lcdSolder.lineHorizontal(0, 16, 160, DARKGREY);
+    lcdSolder.lineHorizontal(0, 20, 128, DARKGREY);
 
-    // Actual / Set
-    char buf[36];
-    snprintf(buf, sizeof(buf), "Actual:%dC / Set:%dC", ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
-    lcdSolder.printString(buf, 6, 20, WHITE, BLACK);
+    char buf[28];
+    snprintf(buf, sizeof(buf), "A:%d  S:%d", ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
+    lcdSolder.printString(buf, 4, 26, WHITE, BLACK);
 
-    // Progress bar (temp)
     int tempPct = (tt > 0) ? constrain((ct * 100) / tt, 0, 100) : 0;
-    drawBar(lcdSolder, 6, 34, 148, 8, tempPct, ORANGE);
+    drawBar(lcdSolder, 4, 44, 120, 8, tempPct, ORANGE);
 
-    // ===== Two gauges =====
-    // Left: SOLD TEMP
-    drawGauge(lcdSolder, 42, 78, 24, "SOLD TEMP", ct < 0 ? 0 : ct, "C", ORANGE, ORANGE);
+    drawGauge(lcdSolder, 34, 85, 22, "TEMP", ct < 0 ? 0 : ct, "C", ORANGE, ORANGE);
+    drawGauge(lcdSolder, 94, 85, 22, "LIFE", pwmPct, "%", CYAN, CYAN);
 
-    // Right: TIP LIFE (= PWM % global, valid T12 & C210)
-    drawGauge(lcdSolder, 118, 78, 24, "TIP LIFE", pwmPct, "%", CYAN, CYAN);
+    lcdSolder.lineHorizontal(0, 120, 128, DARKGREY);
 
-    // ===== Status pills =====
-    lcdSolder.lineHorizontal(0, 108, 160, DARKGREY);
+    lcdSolder.fillRectangle(4, 126, 36, 12, GREEN);
+    lcdSolder.printString("READY", 7, 128, BLACK, GREEN);
 
-    // READY
-    lcdSolder.fillRectangle(4, 112, 36, 12, GREEN);
-    lcdSolder.printString("READY", 8, 114, BLACK, GREEN);
-
-    // IRON ON / OFF
     bool ironOn = (pwm > 0 && !tipError && !sleeping && !overHeat);
     if (ironOn) {
-        lcdSolder.fillRectangle(44, 112, 40, 12, GREEN);
-        lcdSolder.printString("IRON ON", 48, 114, BLACK, GREEN);
+        lcdSolder.fillRectangle(44, 126, 36, 12, GREEN);
+        lcdSolder.printString("IRON", 50, 128, BLACK, GREEN);
     } else {
-        lcdSolder.fillRectangle(44, 112, 40, 12, DARKGREY);
-        lcdSolder.printString("IRON OFF", 46, 114, LIGHTGREY, DARKGREY);
+        lcdSolder.fillRectangle(44, 126, 36, 12, DARKGREY);
+        lcdSolder.printString("OFF", 52, 128, LIGHTGREY, DARKGREY);
     }
 
-    // Status kanan: prioritas ERROR > OVERHEAT > SLEEP > BOOST > normal
     if (tipError) {
-        lcdSolder.fillRectangle(90, 112, 64, 12, RED);
-        lcdSolder.printString("NO TIP", 102, 114, WHITE, RED);
+        lcdSolder.fillRectangle(84, 126, 40, 12, RED);
+        lcdSolder.printString("NOTIP", 88, 128, WHITE, RED);
     } else if (overHeat) {
-        lcdSolder.fillRectangle(90, 112, 64, 12, RED);
-        lcdSolder.printString("OVERHEAT", 96, 114, WHITE, RED);
+        lcdSolder.fillRectangle(84, 126, 40, 12, RED);
+        lcdSolder.printString("OVRHT", 88, 128, WHITE, RED);
     } else if (sleeping) {
-        lcdSolder.fillRectangle(90, 112, 64, 12, BLUE);
-        lcdSolder.printString("SLEEP MODE", 94, 114, WHITE, BLUE);
+        lcdSolder.fillRectangle(84, 126, 40, 12, BLUE);
+        lcdSolder.printString("SLEEP", 88, 128, WHITE, BLUE);
     } else if (boostMode) {
-        lcdSolder.fillRectangle(90, 112, 64, 12, YELLOW);
-        lcdSolder.printString("BOOST", 108, 114, BLACK, YELLOW);
+        lcdSolder.fillRectangle(84, 126, 40, 12, YELLOW);
+        lcdSolder.printString("BOOST", 88, 128, BLACK, YELLOW);
     } else {
-        lcdSolder.fillRectangle(90, 112, 64, 12, DARKGREY);
-        lcdSolder.printString("---", 112, 114, LIGHTGREY, DARKGREY);
+        lcdSolder.fillRectangle(84, 126, 40, 12, DARKGREY);
+        lcdSolder.printString("---", 96, 128, LIGHTGREY, DARKGREY);
     }
 }
 
 // ============================================================
-// HOT AIR (landscape)
+// HOT AIR (portrait 128x160)
 // ============================================================
 static void drawHotAirScreen(bool force)
 {
@@ -173,48 +154,40 @@ static void drawHotAirScreen(bool force)
     lastAirCt = ct; lastAirTt = tt; lastFan = fan; lastAirPower = power;
     lastAirOn = on; lastAirMode = mode;
 
-    lcdHotAir.fillRectangle(0, 0, 160, 128, BLACK);
+    lcdHotAir.fillRectangle(0, 0, 128, 160, BLACK);
 
-    // Title
-    lcdHotAir.printString("HOT AIR", 52, 3, MAGENTA, BLACK);
-    lcdHotAir.lineHorizontal(0, 16, 160, DARKGREY);
+    lcdHotAir.printString("HOT AIR", 28, 4, MAGENTA, BLACK);
+    lcdHotAir.lineHorizontal(0, 20, 128, DARKGREY);
 
-    // Actual / Set
-    char buf[36];
-    snprintf(buf, sizeof(buf), "Actual:%dC / Set:%dC", ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
-    lcdHotAir.printString(buf, 6, 20, WHITE, BLACK);
+    char buf[28];
+    snprintf(buf, sizeof(buf), "A:%d  S:%d", ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
+    lcdHotAir.printString(buf, 4, 26, WHITE, BLACK);
 
-    // Progress bar
     int tempPct = (tt > 0) ? constrain((ct * 100) / tt, 0, 100) : 0;
-    drawBar(lcdHotAir, 6, 34, 148, 8, tempPct, ORANGE);
+    drawBar(lcdHotAir, 4, 44, 120, 8, tempPct, ORANGE);
 
-    // ===== Two gauges =====
-    drawGauge(lcdHotAir, 42, 78, 24, "TEMP", ct < 0 ? 0 : ct, "C", ORANGE, ORANGE);
-    drawGauge(lcdHotAir, 118, 78, 24, "AIRFLOW", fanPct, "%", CYAN, CYAN);
+    drawGauge(lcdHotAir, 34, 85, 22, "TEMP", ct < 0 ? 0 : ct, "C", ORANGE, ORANGE);
+    drawGauge(lcdHotAir, 94, 85, 22, "AIR", fanPct, "%", CYAN, CYAN);
 
-    // ===== Status pills =====
-    lcdHotAir.lineHorizontal(0, 108, 160, DARKGREY);
+    lcdHotAir.lineHorizontal(0, 120, 128, DARKGREY);
 
-    // READY
-    lcdHotAir.fillRectangle(4, 112, 36, 12, GREEN);
-    lcdHotAir.printString("READY", 8, 114, BLACK, GREEN);
+    lcdHotAir.fillRectangle(4, 126, 36, 12, GREEN);
+    lcdHotAir.printString("READY", 7, 128, BLACK, GREEN);
 
-    // HEATER ON / OFF
     if (on) {
-        lcdHotAir.fillRectangle(44, 112, 50, 12, GREEN);
-        lcdHotAir.printString("HEATER ON", 48, 114, BLACK, GREEN);
+        lcdHotAir.fillRectangle(44, 126, 36, 12, GREEN);
+        lcdHotAir.printString("HEAT", 50, 128, BLACK, GREEN);
     } else {
-        lcdHotAir.fillRectangle(44, 112, 50, 12, DARKGREY);
-        lcdHotAir.printString("HEATER OFF", 46, 114, LIGHTGREY, DARKGREY);
+        lcdHotAir.fillRectangle(44, 126, 36, 12, DARKGREY);
+        lcdHotAir.printString("OFF", 52, 128, LIGHTGREY, DARKGREY);
     }
 
-    // AIRFLOW OK
     if (fanPct > 5) {
-        lcdHotAir.fillRectangle(100, 112, 54, 12, CYAN);
-        lcdHotAir.printString("AIRFLOW OK", 102, 114, BLACK, CYAN);
+        lcdHotAir.fillRectangle(84, 126, 40, 12, CYAN);
+        lcdHotAir.printString("AIROK", 88, 128, BLACK, CYAN);
     } else {
-        lcdHotAir.fillRectangle(100, 112, 54, 12, DARKGREY);
-        lcdHotAir.printString("FAN 0%", 112, 114, LIGHTGREY, DARKGREY);
+        lcdHotAir.fillRectangle(84, 126, 40, 12, DARKGREY);
+        lcdHotAir.printString("FAN0", 92, 128, LIGHTGREY, DARKGREY);
     }
 }
 
@@ -249,10 +222,7 @@ void initLcdTemps()
     lcdHotAir.initDisplaySoft();
     forceLcdCsHigh();
 
-    // Landscape 160x128
-    lcdSolder.setRotation(1);
-    lcdHotAir.setRotation(1);
-
+    // Portrait only — driver belum siap landscape
     ready = true;
     lastDraw = 0;
 
