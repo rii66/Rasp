@@ -23,6 +23,33 @@ static char lastAirMode[16] = "";
 // ============================================================
 // Helpers - 160x128 landscape
 // ============================================================
+
+static void printMini(Nokia105& lcd, const char* str, int x, int y,
+                      uint16_t fg, uint16_t bg)
+{
+    const int len = strlen(str);
+    lcd.fillRectangle(x, y, len * 4, 8, bg);
+
+    for (int n = 0; n < len; ++n) {
+        const unsigned char c = (unsigned char)str[n];
+        if (c < 32 || c > 127) continue;
+
+        const int glyph = c - 32;
+        for (int sy = 0; sy < 16; sy += 2) {
+            for (int sx = 0; sx < 8; sx += 2) {
+                bool on = false;
+                for (int yy = 0; yy < 2; ++yy)
+                    for (int xx = 0; xx < 2; ++xx)
+                        if ((font8x16[glyph][sy + yy] >> (7 - (sx + xx))) & 1)
+                            on = true;
+
+                if (on)
+                    lcd.fillRectangle(x + n * 4 + sx / 2, y + sy / 2, 1, 1, fg);
+            }
+        }
+    }
+}
+
 static void drawGauge(Nokia105& lcd, int16_t cx, int16_t cy, int16_t r,
                       const char* label, int value, const char* unit,
                       uint16_t ringColor)
@@ -45,20 +72,21 @@ static void drawGauge(Nokia105& lcd, int16_t cx, int16_t cy, int16_t r,
 static void drawTop(Nokia105& lcd, const char* title, const char* mode, uint16_t titleColor)
 {
     // Clear only header; full-screen clear causes visible blinking.
-    lcd.fillRectangle(0, 0, 160, 16, BLACK);
+    lcd.fillRectangle(0, 0, 160, 14, BLACK);
 
-    lcd.printString(title, 4, 0, titleColor, BLACK);
+    int titleW = strlen(title) * 4;
+    printMini(lcd, title, 4, 2, titleColor, BLACK);
 
-    int modeW = strlen(mode) * 8;
-    lcd.printString(mode, 156 - modeW, 0, WHITE, BLACK);
+    int modeW = strlen(mode) * 4;
+    printMini(lcd, mode, 156 - modeW, 2, WHITE, BLACK);
 
-    lcd.lineHorizontal(4, 16, 152, DARKGREY);
+    lcd.lineHorizontal(4, 13, 152, DARKGREY);
 }
 
 static void drawTempGraph(Nokia105& lcd, int ct, int tt, uint16_t color)
 {
     // Clear graph area only; do not blank the whole LCD every update.
-    lcd.fillRectangle(4, 17, 152, 38, BLACK);
+    lcd.fillRectangle(4, 14, 152, 41, BLACK);
 
     lcd.lineHorizontal(5, 35, 150, DARKGREY);
     lcd.lineHorizontal(5, 41, 150, DARKGREY);
@@ -71,7 +99,7 @@ static void drawTempGraph(Nokia105& lcd, int ct, int tt, uint16_t color)
     char buf[28];
     snprintf(buf, sizeof(buf), "ACT:%dC SET:%dC",
              ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
-    lcd.printString(buf, 8, 17, WHITE, BLACK);
+    lcd.printString(buf, 8, 14, WHITE, BLACK);
 
     int pct = (tt > 0) ? constrain((ct * 100) / tt, 0, 100) : 0;
     int w = (146 * pct) / 100;
@@ -88,16 +116,16 @@ static void drawTempGraph(Nokia105& lcd, int ct, int tt, uint16_t color)
 static void drawStatus(Nokia105& lcd, const char* a, const char* b, const char* c,
                        bool aOk, bool bOk, bool cOk)
 {
-    const int y = 112;
-    const int h = 13;
+    const int y = 117;
+    const int h = 10;
 
     lcd.fillRectangle(3,   y, 44, h, aOk ? GREEN : DARKGREY);
     lcd.fillRectangle(50,  y, 60, h, bOk ? GREEN : DARKGREY);
     lcd.fillRectangle(114, y, 43, h, cOk ? GREEN : DARKGREY);
 
-    lcd.printString(a, 5,   y + 1, aOk ? BLACK : LIGHTGREY, aOk ? GREEN : DARKGREY);
-    lcd.printString(b, 52,  y + 1, bOk ? BLACK : LIGHTGREY, bOk ? GREEN : DARKGREY);
-    lcd.printString(c, 116, y + 1, cOk ? BLACK : LIGHTGREY, cOk ? GREEN : DARKGREY);
+    printMini(lcd, a, 5,   y + 1, aOk ? BLACK : LIGHTGREY, aOk ? GREEN : DARKGREY);
+    printMini(lcd, b, 52,  y + 1, bOk ? BLACK : LIGHTGREY, bOk ? GREEN : DARKGREY);
+    printMini(lcd, c, 116, y + 1, cOk ? BLACK : LIGHTGREY, cOk ? GREEN : DARKGREY);
 }
 
 // ============================================================
