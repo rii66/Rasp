@@ -5,6 +5,9 @@
 
 static HotGun hotGun;
 
+static uint16_t fanPotRaw = 0;
+static uint8_t fanPotPercent = 0;
+
 void initAirHandler() {
     hotGun.begin();
     pinMode(PIN_POT_FAN, INPUT);
@@ -40,20 +43,40 @@ void updateAirFanFromPot() {
     if (millis() - lastRead < 50) return;
     lastRead = millis();
 
-    int raw = analogRead(PIN_POT_FAN);
-    raw = constrain(raw, 0, 4095);
+    // ADC settling: discard the first conversion on this channel.
+    analogRead(PIN_POT_FAN);
+
+    uint32_t sum = 0;
+    for (uint8_t i = 0; i < 8; ++i) {
+        sum += analogRead(PIN_POT_FAN);
+        delayMicroseconds(40);
+    }
+
+    const uint16_t raw = (uint16_t)((sum + 4) / 8);
+    fanPotRaw = raw;
 
     int speed = map(raw, 0, 4095, 0, 255);
+    speed = constrain(speed, 0, 255);
 
     // Dead zone near zero: fan benar-benar OFF.
     if (speed < FAN_MIN_SPEED / 2)
         speed = 0;
+
+    fanPotPercent = (uint8_t)((speed * 100 + 127) / 255);
 
     // Jangan tulis PWM berulang jika nilai tidak berubah.
     if (speed == lastSpeed) return;
     lastSpeed = speed;
 
     airSetFan((uint8_t)speed);
+}
+
+uint16_t airGetFanPotRaw() {
+    return fanPotRaw;
+}
+
+uint8_t airGetFanPotPercent() {
+    return fanPotPercent;
 }
 
 void IRAM_ATTR handleAirZeroCross() {
