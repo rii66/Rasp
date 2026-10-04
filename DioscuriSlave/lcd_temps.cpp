@@ -4,6 +4,7 @@
 #include "handler.h"
 #include "tip.h"
 #include "Nokia105_LCD.h"
+#include "fonts.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -25,6 +26,7 @@ static char lastAirMode[16] = "";
 
 static const int16_t W = 128;
 static const int16_t H = 160;
+static const uint16_t HDR_BG = 0x2104;   // warna header bar
 
 // ============================================================
 static void forceCsHigh()
@@ -36,9 +38,9 @@ static void forceCsHigh()
     delayMicroseconds(60);
 }
 
-static void clearRegion(Nokia105& lcd, int x, int y, int w, int h)
+static void clearRegion(Nokia105& lcd, int x, int y, int w, int h, uint16_t col = BLACK)
 {
-    lcd.fillRectangle(x, y, w, h, BLACK);
+    lcd.fillRectangle(x, y, w, h, col);
 }
 
 static void printCenter(Nokia105& lcd, const char* s, int y, uint16_t fg)
@@ -49,20 +51,63 @@ static void printCenter(Nokia105& lcd, const char* s, int y, uint16_t fg)
     lcd.printString(s, (uint8_t)x, (uint8_t)y, fg, BLACK);
 }
 
-static void printLeft(Nokia105& lcd, const char* s, int x, int y, uint16_t fg)
+static void printLeft(Nokia105& lcd, const char* s, int x, int y, uint16_t fg, uint16_t bg = BLACK)
 {
-    lcd.printString(s, (uint8_t)x, (uint8_t)y, fg, BLACK);
+    lcd.printString(s, (uint8_t)x, (uint8_t)y, fg, bg);
 }
 
-// Warna bar: hijau -> kuning -> orange -> merah
+// --- digit 2x (16x32) dari font8x16 ---
+static void drawChar2x(Nokia105& lcd, char c, int x, int y, uint16_t fg, uint16_t bg)
+{
+    if (c < 0x20 || c > 0x7A) c = '?';
+    const char* glyph = font8x16[c - 0x20];
+
+    for (uint8_t row = 0; row < 16; row++) {
+        uint8_t bits = (uint8_t)glyph[row];
+        for (uint8_t col = 0; col < 8; col++) {
+            uint16_t colr = (bits & 0x01) ? fg : bg;
+            // 2x2 block
+            lcd.fillRectangle(x + col * 2, y + row * 2, 2, 2, colr);
+            bits >>= 1;
+        }
+    }
+}
+
+static void printTemp2x(Nokia105& lcd, int temp, int y)
+{
+    char buf[8];
+    if (temp < 0) snprintf(buf, sizeof(buf), "---");
+    else          snprintf(buf, sizeof(buf), "%d", temp);
+
+    int len = strlen(buf);
+    // tiap digit 16 px, derajat + C \~ 20 px
+    int totalW = len * 16 + 20;
+    int x = (W - totalW) / 2;
+    if (x < 2) x = 2;
+
+    clearRegion(lcd, 2, y, W - 4, 34, BLACK);
+
+    for (int i = 0; i < len; i++) {
+        drawChar2x(lcd, buf[i], x + i * 16, y, ORANGE, BLACK);
+    }
+
+    // derajat ° (lingkaran kecil) + C
+    int dx = x + len * 16 + 2;
+    int dy = y + 2;
+    // lingkaran derajat
+    lcd.circle(dx + 3, dy + 4, 3, ORANGE);
+    lcd.circle(dx + 3, dy + 4, 2, BLACK);   // hollow
+    // C biasa di samping
+    printLeft(lcd, "C", dx + 8, y + 8, ORANGE, BLACK);
+}
+
+// Warna bar gradient
 static uint16_t barColor(int pct)
 {
-    if (pct < 0)   pct = 0;
-    if (pct > 100) pct = 100;
-    if (pct < 25) return GREEN;      // 0-24%
-    if (pct < 50) return 0xFFE0;     // 25-49%  YELLOW
-    if (pct < 75) return ORANGE;     // 50-74%
-    return RED;                      // 75-100%
+    if (pct < 25) return GREEN;
+    if (pct < 50) return YELLOW;
+    if (pct < 75) return ORANGE;
+    return RED;
 }
 
 static void drawBar(Nokia105& lcd, int x, int y, int w, int h, int pct)
@@ -72,7 +117,6 @@ static void drawBar(Nokia105& lcd, int x, int y, int w, int h, int pct)
 
     lcd.fillRectangle(x, y, w, h, DARKGREY);
     lcd.fillRectangle(x + 1, y + 1, w - 2, h - 2, BLACK);
-
     int fw = ((w - 4) * pct) / 100;
     if (fw > 0)
         lcd.fillRectangle(x + 2, y + 2, fw, h - 4, barColor(pct));
@@ -93,12 +137,11 @@ static void drawPill(Nokia105& lcd, int x, int y, int w, int h,
                     active ? activeCol : DARKGREY);
 }
 
-// Tip profile label singkat (max 4 char biar muat pill)
 static const char* tipLabel()
 {
     if (activeTip && activeTip->name) {
         if (strcmp(activeTip->name, "CUSTOM") == 0) return "CUST";
-        return activeTip->name;   // "T12" / "C210"
+        return activeTip->name;
     }
     switch (currentTip) {
         case TIP_T12:    return "T12";
@@ -110,22 +153,16 @@ static const char* tipLabel()
 }
 
 // ============================================================
-// STATIC FRAME
-// ============================================================
 static void drawSolderStatic(Nokia105& lcd)
 {
     lcd.displayClear();
 
-    // Header bar
-    lcd.fillRectangle(0, 0, W, 18, 0x2104);
+    lcd.fillRectangle(0, 0, W, 18, HDR_BG);
     lcd.lineHorizontal(0, 0,  W, ORANGE);
     lcd.lineHorizontal(0, 17, W, ORANGE);
-    printLeft(lcd, "SOLDER", 4, 1, ORANGE);
+    printLeft(lcd, "SOLDER", 4, 1, ORANGE, HDR_BG);
 
-    // separator bawah header
-    lcd.lineHorizontal(2, 68, W - 4, DARKGREY);
-
-    // footer line
+    lcd.lineHorizontal(2, 72, W - 4, DARKGREY);
     lcd.lineHorizontal(2, 138, W - 4, DARKGREY);
 }
 
@@ -133,17 +170,15 @@ static void drawHotAirStatic(Nokia105& lcd)
 {
     lcd.displayClear();
 
-    lcd.fillRectangle(0, 0, W, 18, 0x2104);
+    lcd.fillRectangle(0, 0, W, 18, HDR_BG);
     lcd.lineHorizontal(0, 0,  W, ORANGE);
     lcd.lineHorizontal(0, 17, W, ORANGE);
-    printLeft(lcd, "HOT AIR", 4, 1, ORANGE);
+    printLeft(lcd, "HOT AIR", 4, 1, ORANGE, HDR_BG);
 
-    lcd.lineHorizontal(2, 68, W - 4, DARKGREY);
+    lcd.lineHorizontal(2, 72, W - 4, DARKGREY);
     lcd.lineHorizontal(2, 138, W - 4, DARKGREY);
 }
 
-// ============================================================
-// SOLDER
 // ============================================================
 static void drawSolderScreen(bool force)
 {
@@ -176,58 +211,41 @@ static void drawSolderScreen(bool force)
 
     char buf[20];
 
-    // --- Header kanan: Heater ON / OFF ---
+    // Header ON/OFF — clear dengan warna header (bukan hitam)
     if (force || stChanged || pwmChanged) {
-        clearRegion(lcdSolder, 72, 1, 56, 16);
+        clearRegion(lcdSolder, 72, 1, 56, 16, HDR_BG);
         printLeft(lcdSolder, heatOn ? "ON " : "OFF", 88, 1,
-                  heatOn ? GREEN : LIGHTGREY);
+                  heatOn ? GREEN : LIGHTGREY, HDR_BG);
     }
 
-    // --- SUHU JUMBO ---
+    // Suhu jumbo 2x
     if (force || tempChanged) {
-        clearRegion(lcdSolder, 4, 20, 120, 28);
-        if (ct < 0) snprintf(buf, sizeof(buf), "---");
-        else        snprintf(buf, sizeof(buf), "%d", ct);
-        // angka besar di tengah
-        int len = strlen(buf);
-        int x = (W - len * 8) / 2 - 8;
-        if (x < 4) x = 4;
-        lcdSolder.printString(buf, (uint8_t)x, 22, ORANGE, BLACK);
-        // simbol derajat
-        printLeft(lcdSolder, "C", (uint8_t)(x + len * 8 + 2), 24, ORANGE);
+        printTemp2x(lcdSolder, ct, 20);
     }
 
-    // --- SET (lebih kecil) ---
+    // set : xxx C
     if (force || setChanged) {
-        clearRegion(lcdSolder, 4, 50, 120, 16);
+        clearRegion(lcdSolder, 4, 56, 120, 16);
         snprintf(buf, sizeof(buf), "set : %d C", tt < 0 ? 0 : tt);
-        printCenter(lcdSolder, buf, 50, LIGHTGREY);
+        printCenter(lcdSolder, buf, 56, LIGHTGREY);
     }
 
-    // --- TIP / PWM % + bar warna ---
-    if (force || pwmChanged || tipChanged || tipErr != lastTipErr || overOn != lastOver) {
-        clearRegion(lcdSolder, 4, 72, 120, 16);
+    // PWM % + bar
+    if (force || pwmChanged || tipErr != lastTipErr || overOn != lastOver) {
+        clearRegion(lcdSolder, 4, 76, 120, 16);
         snprintf(buf, sizeof(buf), "PWM %d%%", pwmPct);
-        printLeft(lcdSolder, buf, 4, 72, WHITE);
-
-        drawBar(lcdSolder, 4, 92, 120, 14, tipErr ? 0 : pwmPct);
+        printLeft(lcdSolder, buf, 4, 76, WHITE);
+        drawBar(lcdSolder, 4, 96, 120, 12, tipErr ? 0 : pwmPct);
     }
 
-    // --- Status pills: [Ready] [TipProfile] [Sleep/Boost] ---
+    // Pills
     if (force || stChanged || tipChanged || pwmChanged) {
         clearRegion(lcdSolder, 2, 114, 124, 24);
 
         const bool readyOk = !tipErr && !overOn;
-        const char* tipStr = tipLabel();
+        drawPill(lcdSolder, 3,  116, 38, 20, readyOk ? "RDY" : "ERR", readyOk, readyOk ? GREEN : RED);
+        drawPill(lcdSolder, 44, 116, 40, 20, tipLabel(), true, 0x8410);
 
-        // Ready
-        drawPill(lcdSolder, 3,  116, 38, 20,
-                 readyOk ? "RDY" : "ERR", readyOk, readyOk ? GREEN : RED);
-
-        // Tip profile
-        drawPill(lcdSolder, 44, 116, 40, 20, tipStr, true, 0x8410); // grey-blue
-
-        // Sleep / Boost / Run
         if (boostOn)
             drawPill(lcdSolder, 87, 116, 38, 20, "BST", true, ORANGE);
         else if (sleepOn)
@@ -243,8 +261,6 @@ static void drawSolderScreen(bool force)
 }
 
 // ============================================================
-// HOT AIR
-// ============================================================
 static void drawHotAirScreen(bool force)
 {
     const int ct     = (int)airGetTemp();
@@ -254,7 +270,6 @@ static void drawHotAirScreen(bool force)
     const bool on    = airIsOn();
     const char* mode = airGetModeStr();
     const int fanPct = constrain((fan * 100) / 255, 0, 100);
-    const int pwrPct = constrain((power * 100) / 255, 0, 100);
 
     const bool tempChanged = (ct != lastAirCt);
     const bool setChanged  = (tt != lastAirTt);
@@ -269,47 +284,37 @@ static void drawHotAirScreen(bool force)
 
     char buf[20];
 
-    // Header kanan: ON / OFF
+    // Header ON/OFF — sama, clear dengan HDR_BG
     if (force || stChanged) {
-        clearRegion(lcdHotAir, 80, 1, 48, 16);
+        clearRegion(lcdHotAir, 80, 1, 48, 16, HDR_BG);
         printLeft(lcdHotAir, on ? "ON " : "OFF", 96, 1,
-                  on ? GREEN : LIGHTGREY);
+                  on ? GREEN : LIGHTGREY, HDR_BG);
     }
 
-    // SUHU JUMBO
+    // Suhu jumbo 2x
     if (force || tempChanged) {
-        clearRegion(lcdHotAir, 4, 20, 120, 28);
-        if (ct < 0) snprintf(buf, sizeof(buf), "---");
-        else        snprintf(buf, sizeof(buf), "%d", ct);
-        int len = strlen(buf);
-        int x = (W - len * 8) / 2 - 8;
-        if (x < 4) x = 4;
-        lcdHotAir.printString(buf, (uint8_t)x, 22, ORANGE, BLACK);
-        printLeft(lcdHotAir, "C", (uint8_t)(x + len * 8 + 2), 24, ORANGE);
+        printTemp2x(lcdHotAir, ct, 20);
     }
 
-    // SET
+    // set
     if (force || setChanged) {
-        clearRegion(lcdHotAir, 4, 50, 120, 16);
+        clearRegion(lcdHotAir, 4, 56, 120, 16);
         snprintf(buf, sizeof(buf), "set : %d C", tt < 0 ? 0 : tt);
-        printCenter(lcdHotAir, buf, 50, LIGHTGREY);
+        printCenter(lcdHotAir, buf, 56, LIGHTGREY);
     }
 
-    // FAN % + bar warna (pakai fanPct, fallback power)
+    // FAN % + bar
     if (force || fanChanged) {
-        clearRegion(lcdHotAir, 4, 72, 120, 16);
+        clearRegion(lcdHotAir, 4, 76, 120, 16);
         snprintf(buf, sizeof(buf), "FAN %d%%", fanPct);
-        printLeft(lcdHotAir, buf, 4, 72, WHITE);
-
-        drawBar(lcdHotAir, 4, 92, 120, 14, fanPct);
+        printLeft(lcdHotAir, buf, 4, 76, WHITE);
+        drawBar(lcdHotAir, 4, 96, 120, 12, fanPct);
     }
 
-    // Status pills
+    // Pills
     if (force || stChanged || fanChanged) {
         clearRegion(lcdHotAir, 2, 114, 124, 24);
-
         const bool fanOk = fanPct > 5;
-
         drawPill(lcdHotAir, 3,  116, 38, 20, "RDY", true, GREEN);
         drawPill(lcdHotAir, 44, 116, 40, 20, on ? "HEAT" : "OFF", on, ORANGE);
         drawPill(lcdHotAir, 87, 116, 38, 20, fanOk ? "AIR" : "FAN", fanOk, CYAN);
