@@ -135,8 +135,9 @@ void Nokia105::invertDisplay(bool invert) {
   writeCmd(invert ? NOKIA105_INVON : NOKIA105_INVOFF);
 }
 
-static inline int16_t logicalWidth(uint8_t)  { return WIDTH; }
-static inline int16_t logicalHeight(uint8_t) { return HEIGHT; }
+// Portrait (rot 0/2) = 128x160, Landscape (rot 1/3) = 160x128
+static inline int16_t logicalWidth(uint8_t r)  { return (r & 1) ? 160 : 128; }
+static inline int16_t logicalHeight(uint8_t r) { return (r & 1) ? 128 : 160; }
 
 void Nokia105::setRotation(uint8_t r) {
   _rotation = r & 3;
@@ -163,8 +164,8 @@ void Nokia105::initDisplaySoft() {
   delay(120);
   writeCmd(NOKIA105_COLMOD);
   writeData(0x05);
-  // Nokia 105 native landscape: MV=1 / MADCTL 0x68.
-  setRotation(1);
+  // Portrait mode (128x160) – matches dual-station dashboard layout
+  setRotation(0);
   writeCmd(NOKIA105_NORON);
   delay(10);
   displayOn();
@@ -395,6 +396,45 @@ void Nokia105::image1d(uint16_t w, uint16_t h, uint16_t shiftX, uint16_t shiftY,
 }
 
 void Nokia105::printBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
+                           int16_t w, int16_t h, uint16_t color) {
+  int16_t byteWidth = (w + 7) / 8;
+  uint8_t byte = 0;
+
+  for (int16_t j = 0; j < h; j++, y++) {
+    for (int16_t i = 0; i < w; i++) {
+      if (i & 7)
+        byte <<= 1;
+      else
+        byte = bitmap[j * byteWidth + i / 8];
+      if (byte & 0x80)
+        drawPixel(x + i, y, color);
+    }
+  }
+}
+
+void Nokia105::smpteTest() {
+  fillRectangle(0,   0, 18, 160, WHITE);
+  fillRectangle(18,  0, 18, 160, BLUE);
+  fillRectangle(36,  0, 18, 160, RED);
+  fillRectangle(54,  0, 18, 160, GREEN);
+  fillRectangle(72,  0, 18, 160, CYAN);
+  fillRectangle(90,  0, 18, 160, MAGENTA);
+  fillRectangle(108, 0, 18, 160, YELLOW);
+  fillRectangle(126, 0, 34, 160, BLACK);
+}
+
+void Nokia105::colorPalletTest() {
+  const uint16_t palette[] = {
+    WHITE, BLUE, RED, GREEN, CYAN, MAGENTA, YELLOW,
+    NAVY, DARKGREEN, DARKCYAN, MAROON, PURPLE, OLIVE,
+    LIGHTGREY, DARKGREY, ORANGE, PINK
+  };
+  for (uint8_t i = 0; i < 10; i++) {
+    backgroundColor(palette[i]);
+    delay(300);
+  }
+}
+d Nokia105::printBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
                            int16_t w, int16_t h, uint16_t color) {
   int16_t byteWidth = (w + 7) / 8;
   uint8_t byte = 0;
