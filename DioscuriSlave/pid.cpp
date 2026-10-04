@@ -112,9 +112,18 @@ void updatePID() {
         return;
     }
 
+    // ===== SLEEP = HEATER OFF TOTAL =====
+    if (sleeping) {
+        pwmOut      = 0;
+        pidIntegral = 0;
+        lastError   = 0;
+        heaterState = STATE_SLEEP;
+        heaterOff();
+        return;
+    }
+
     // ===== TARGET SELECT =====
     int activeTarget = targetTemp;
-    if (sleeping)  activeTarget = sleepTemp;
     if (boostMode) activeTarget = boostTemp;
 
     // ===== HEATER STATE =====
