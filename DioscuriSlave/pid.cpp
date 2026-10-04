@@ -87,15 +87,19 @@ void handleSafety() {
 // READ TEMP
 //====================================================================//
 int readTemp() {
-    startTempRead();                     // heater OFF + short delay
-    
-    uint16_t raw = getAverageADC();
-    Serial.printf("ADC=%u  temp=%d  tipErr=%d\n", raw, adcToTemp(raw), tipError);
-    endTempRead();                       // heater ON kembali
+    startTempRead();
 
-    return adcToTemp(rawAdc);
+    uint16_t rawAdc = getAverageADC();
+
+    endTempRead();
+
+    // ===== DEBUG ADC ( serial ) =====
+    int t = adcToTemp(rawAdc);
+    Serial.printf("ADC=%u  temp=%d  tipErr=%d\n", rawAdc, t, tipError);
+    // ==================================
+
+    return t;   // atau: return adcToTemp(rawAdc);
 }
-
 //====================================================================//
 // PID UPDATE
 //====================================================================//
