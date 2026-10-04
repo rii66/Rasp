@@ -13,8 +13,8 @@
 //====================================================================//
 #if defined(ARDUINO_ARCH_RP2040)
 const uint8_t  ADC_SAMPLE_COUNT     = 16;
-const uint16_t ADC_SAMPLE_DELAY_US  = 20;
-const uint16_t SETTLING_DELAY_US    = 150;
+const uint16_t ADC_SAMPLE_DELAY_US  = 120;
+const uint16_t SETTLING_DELAY_US    = 230;
 #else
 const uint8_t  ADC_SAMPLE_COUNT     = 24;
 const uint16_t ADC_SAMPLE_DELAY_US  = 40;
@@ -88,9 +88,9 @@ void handleSafety() {
 //====================================================================//
 int readTemp() {
     startTempRead();                     // heater OFF + short delay
-
-    uint16_t rawAdc = getAverageADC();
-
+    
+    uint16_t raw = getAverageADC();
+    Serial.printf("ADC=%u  temp=%d  tipErr=%d\n", raw, adcToTemp(raw), tipError);
     endTempRead();                       // heater ON kembali
 
     return adcToTemp(rawAdc);
