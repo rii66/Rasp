@@ -120,7 +120,18 @@ public:
   }
 
   void setFan(uint8_t speed) {
+    speed = constrain(speed, 0, 255);
+
+    // Hot-Air ON/FIXED wajib punya airflow minimum agar heater tidak pernah
+    // bekerja tanpa blower. Saat OFF/COOLING, simpan nilai pot tanpa
+    // memaksa fan fisik karena COOLING dikendalikan oleh state machine.
+    if ((mode == MODE_ON || mode == MODE_FIXED) &&
+        speed > 0 && speed < FAN_MIN_SPEED) {
+      speed = FAN_MIN_SPEED;
+    }
+
     fan_speed = speed;
+
     if (mode == MODE_ON || mode == MODE_FIXED) {
       fan.setSpeed(fan_speed);
     }
@@ -130,6 +141,12 @@ public:
     if (on) {
       if (mode == MODE_OFF || mode == MODE_COOLING) {
         mode = MODE_ON;
+
+        // Jangan izinkan Hot-Air start dengan blower = 0.
+        if (fan_speed < FAN_MIN_SPEED) {
+          fan_speed = FAN_MIN_SPEED;
+        }
+
         fan.setSpeed(fan_speed);
         pid.reset();
       }
