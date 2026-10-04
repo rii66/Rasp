@@ -125,9 +125,10 @@ public:
     // Hot-Air ON/FIXED wajib punya airflow minimum agar heater tidak pernah
     // bekerja tanpa blower. Saat OFF/COOLING, simpan nilai pot tanpa
     // memaksa fan fisik karena COOLING dikendalikan oleh state machine.
-    if ((mode == MODE_ON || mode == MODE_FIXED) &&
-        speed > 0 && speed < FAN_MIN_SPEED) {
-      speed = FAN_MIN_SPEED;
+    if (mode == MODE_ON || mode == MODE_FIXED) {
+      if (speed < FAN_MIN_SPEED) {
+        speed = FAN_MIN_SPEED;
+      }
     }
 
     fan_speed = speed;
