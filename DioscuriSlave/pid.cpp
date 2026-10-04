@@ -86,19 +86,20 @@ void handleSafety() {
 //====================================================================//
 // READ TEMP
 //====================================================================//
+static int filteredTemp = -1;
+
 int readTemp() {
     startTempRead();
-
     uint16_t rawAdc = getAverageADC();
-
     endTempRead();
 
-    // ===== DEBUG ADC ( serial ) =====
     int t = adcToTemp(rawAdc);
-    Serial.printf("ADC=%u  temp=%d  tipErr=%d\n", rawAdc, t, tipError);
-    // ==================================
 
-    return t;   // atau: return adcToTemp(rawAdc);
+    // EMA sederhana (alpha \~0.3)
+    if (filteredTemp < 0) filteredTemp = t;
+    else filteredTemp = (filteredTemp * 7 + t * 3) / 10;  // 70% lama + 30% baru
+
+    return filteredTemp;
 }
 //====================================================================//
 // PID UPDATE
