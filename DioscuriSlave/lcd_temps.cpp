@@ -4,14 +4,16 @@
 #include "handler.h"
 #include "Nokia105_LCD.h"
 #include <string.h>
+#include <stdio.h>
 
 static Nokia105 lcdSolder(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS1);
 static Nokia105 lcdHotAir(PIN_LCD_SDA, PIN_LCD_SCK, PIN_LCD_RESET, PIN_LCD_CS2);
 
 static bool ready = false;
 static uint32_t lastDraw = 0;
-static const uint32_t DRAW_MS = 250;
+static const uint32_t DRAW_MS = 200;
 
+// cache
 static int  lastSolderCt = -999, lastSolderTt = -999, lastSolderPwm = -999;
 static bool lastTipErr = false, lastSleep = false, lastBoost = false, lastOver = false;
 static uint8_t lastTipMode = 255;
@@ -21,9 +23,8 @@ static bool lastAirOn = false;
 static char lastAirMode[16] = "";
 
 // ============================================================
-// Helpers - 160x128 landscape
+// Mini font (4x8) - sudah ada di kode lama
 // ============================================================
-
 static void printMini(Nokia105& lcd, const char* str, int x, int y,
                       uint16_t fg, uint16_t bg)
 {
@@ -50,86 +51,55 @@ static void printMini(Nokia105& lcd, const char* str, int x, int y,
     }
 }
 
-static void drawGauge(Nokia105& lcd, int16_t cx, int16_t cy, int16_t r,
-                      const char* label, int value, const char* unit,
-                      uint16_t ringColor)
+// ============================================================
+// SEMI-3D BORDER
+// ============================================================
+static void drawBorder3D(Nokia105& lcd, int x, int y, int w, int h)
 {
-    lcd.circle(cx, cy, r, ringColor);
-    lcd.circle(cx, cy, r - 2, ringColor);
+    // Outer frame
+    lcd.lineHorizontal(x,     y,     w, LIGHTGREY);
+    lcd.lineHorizontal(x,     y+h-1, w, DARKGREY);
+    lcd.lineVertical  (x,     y,     h, LIGHTGREY);
+    lcd.lineVertical  (x+w-1, y,     h, DARKGREY);
 
-    int labelW = strlen(label) * 8;
-    lcd.printString(label, cx - labelW / 2, cy - 16, LIGHTGREY, BLACK);
+    // Inner highlight (top + left)
+    lcd.lineHorizontal(x+1, y+1, w-2, WHITE);
+    lcd.lineVertical  (x+1, y+1, h-2, WHITE);
 
-    char buf[12];
-    snprintf(buf, sizeof(buf), "%d", value);
-    int valueW = strlen(buf) * 8;
-    lcd.printString(buf, cx - valueW / 2, cy - 2, ringColor, BLACK);
-
-    int unitW = strlen(unit) * 8;
-    lcd.printString(unit, cx - unitW / 2, cy + 14, LIGHTGREY, BLACK);
+    // Inner shadow (bottom + right)
+    lcd.lineHorizontal(x+2, y+h-2, w-3, DARKGREY);
+    lcd.lineVertical  (x+w-2, y+2, h-3, DARKGREY);
 }
 
-static void drawTop(Nokia105& lcd, const char* title, const char* mode, uint16_t titleColor)
+// Progress bar dengan border 3D tipis
+static void drawBar(Nokia105& lcd, int x, int y, int w, int h, int pct, uint16_t color)
 {
-    // Clear only header; full-screen clear causes visible blinking.
-    lcd.fillRectangle(0, 0, 160, 14, BLACK);
+    // frame
+    lcd.fillRectangle(x, y, w, h, DARKGREY);
+    lcd.lineHorizontal(x, y, w, LIGHTGREY);
+    lcd.lineVertical  (x, y, h, LIGHTGREY);
 
-    int titleW = strlen(title) * 4;
-    printMini(lcd, title, 4, 2, titleColor, BLACK);
-
-    int modeW = strlen(mode) * 4;
-    printMini(lcd, mode, 156 - modeW, 2, WHITE, BLACK);
-
-    lcd.lineHorizontal(4, 13, 152, DARKGREY);
+    int fill = ((w - 2) * constrain(pct, 0, 100)) / 100;
+    if (fill > 0)
+        lcd.fillRectangle(x + 1, y + 1, fill, h - 2, color);
 }
 
-static void drawTempGraph(Nokia105& lcd, int ct, int tt, uint16_t color)
+// Status pill
+static void drawPill(Nokia105& lcd, int x, int y, int w, const char* txt, bool active)
 {
-    // Clear graph area only; do not blank the whole LCD every update.
-    lcd.fillRectangle(4, 14, 152, 41, BLACK);
+    uint16_t bg = active ? GREEN : DARKGREY;
+    uint16_t fg = active ? BLACK : LIGHTGREY;
 
-    lcd.lineHorizontal(5, 35, 150, DARKGREY);
-    lcd.lineHorizontal(5, 41, 150, DARKGREY);
-    lcd.lineHorizontal(5, 47, 150, DARKGREY);
-    lcd.lineHorizontal(5, 53, 150, DARKGREY);
-    lcd.lineVertical(5, 35, 19, LIGHTGREY);
-    lcd.lineVertical(154, 35, 19, LIGHTGREY);
-    lcd.lineHorizontal(5, 53, 150, LIGHTGREY);
+    lcd.fillRectangle(x, y, w, 14, bg);
+    // semi-3D kecil
+    lcd.lineHorizontal(x, y, w, active ? WHITE : LIGHTGREY);
+    lcd.lineVertical  (x, y, 14, active ? WHITE : LIGHTGREY);
 
-    char buf[28];
-    snprintf(buf, sizeof(buf), "ACT:%dC SET:%dC",
-             ct < 0 ? 0 : ct, tt < 0 ? 0 : tt);
-    lcd.printString(buf, 8, 14, WHITE, BLACK);
-
-    int pct = (tt > 0) ? constrain((ct * 100) / tt, 0, 100) : 0;
-    int w = (146 * pct) / 100;
-    if (w > 0)
-        lcd.fillRectangle(7, 44, w, 6, color);
-
-    // Target line + actual marker
-    lcd.lineHorizontal(7, 41, 146, color);
-    int marker = 7 + (146 * pct) / 100;
-    if (marker > 7 && marker < 153)
-        lcd.fillRectangle(marker, 42, 2, 10, color);
-}
-
-static void drawStatus(Nokia105& lcd, const char* a, const char* b, const char* c,
-                       bool aOk, bool bOk, bool cOk)
-{
-    const int y = 117;
-    const int h = 10;
-
-    lcd.fillRectangle(3,   y, 44, h, aOk ? GREEN : DARKGREY);
-    lcd.fillRectangle(50,  y, 60, h, bOk ? GREEN : DARKGREY);
-    lcd.fillRectangle(114, y, 43, h, cOk ? GREEN : DARKGREY);
-
-    printMini(lcd, a, 5,   y + 1, aOk ? BLACK : LIGHTGREY, aOk ? GREEN : DARKGREY);
-    printMini(lcd, b, 52,  y + 1, bOk ? BLACK : LIGHTGREY, bOk ? GREEN : DARKGREY);
-    printMini(lcd, c, 116, y + 1, cOk ? BLACK : LIGHTGREY, cOk ? GREEN : DARKGREY);
+    printMini(lcd, txt, x + 4, y + 3, fg, bg);
 }
 
 // ============================================================
-// SOLDER
+// SOLDER SCREEN (1 LCD)
 // ============================================================
 static void drawSolderScreen(bool force)
 {
@@ -155,35 +125,47 @@ static void drawSolderScreen(bool force)
     lastOver = overHeat;
     lastTipMode = currentTipMode;
 
-    const char* tipName = "T12";
-    if (tipError)                  tipName = "ERR";
-    else if (currentTipMode == 1)  tipName = "C210";
-    else if (currentTipMode >= 2)  tipName = "CUST";
+    // Clear full
+    lcdSolder.fillRectangle(0, 0, 160, 128, BLACK);
 
-    drawTop(lcdSolder, "SOLDER", tipName, ORANGE);
-    drawTempGraph(lcdSolder, ct, tt, ORANGE);
+    // Outer semi-3D border
+    drawBorder3D(lcdSolder, 2, 2, 156, 124);
 
-    drawGauge(lcdSolder, 47, 82, 25, "TEMP",
-              ct < 0 ? 0 : ct, "C", ORANGE);
+    // Title
+    const char* tipName = tipError ? "ERR" :
+                          (currentTipMode == 1) ? "C210" :
+                          (currentTipMode >= 2) ? "CUST" : "T12";
 
-    drawGauge(lcdSolder, 113, 82, 25, "POWER",
-              pwmPct, "%", CYAN);
+    printMini(lcdSolder, "SOLDER STATION", 10, 8, ORANGE, BLACK);
+    printMini(lcdSolder, tipName, 130, 8, LIGHTGREY, BLACK);
 
-    const bool ironOn = (pwm > 0 && !tipError && !sleeping && !overHeat);
-    const bool readyOk = !tipError && !overHeat;
-    const bool airUnused = true;
+    // Big temperature
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", ct < 0 ? 0 : ct);
+    lcdSolder.printString(buf, 18, 28, ORANGE, BLACK);
+    lcdSolder.printString("C", 18 + strlen(buf)*8, 28, LIGHTGREY, BLACK);
 
-    drawStatus(lcdSolder,
-               "READY",
-               ironOn ? "HEAT ON" : "HEAT OFF",
-               boostMode ? "BOOST" : (sleeping ? "SLEEP" : "POWER"),
-               readyOk,
-               ironOn,
-               airUnused);
+    // SET
+    snprintf(buf, sizeof(buf), "SET: %d C", tt);
+    printMini(lcdSolder, buf, 18, 52, WHITE, BLACK);
+
+    // POWER bar
+    printMini(lcdSolder, "POWER", 18, 68, LIGHTGREY, BLACK);
+    snprintf(buf, sizeof(buf), "%d%%", pwmPct);
+    printMini(lcdSolder, buf, 120, 68, CYAN, BLACK);
+    drawBar(lcdSolder, 18, 80, 124, 10, pwmPct, CYAN);
+
+    // Status pills
+    bool ironOn = (pwm > 0 && !tipError && !sleeping && !overHeat);
+    bool readyOk = !tipError && !overHeat;
+
+    drawPill(lcdSolder, 10,  100, 44, "READY",   readyOk);
+    drawPill(lcdSolder, 58,  100, 50, ironOn ? "HEAT ON" : "HEAT OFF", ironOn);
+    drawPill(lcdSolder, 112, 100, 40, sleeping ? "SLEEP" : (boostMode ? "BOOST" : "RUN"), sleeping || boostMode);
 }
 
 // ============================================================
-// HOT AIR
+// HOT AIR SCREEN (1 LCD)
 // ============================================================
 static void drawHotAirScreen(bool force)
 {
@@ -197,7 +179,7 @@ static void drawHotAirScreen(bool force)
 
     if (!force &&
         ct == lastAirCt && tt == lastAirTt && fan == lastFan &&
-        power == lastAirPower && on == lastAirOn && 
+        power == lastAirPower && on == lastAirOn &&
         strcmp(lastAirMode, (mode ? mode : "")) == 0)
         return;
 
@@ -206,31 +188,42 @@ static void drawHotAirScreen(bool force)
     lastFan = fan;
     lastAirPower = power;
     lastAirOn = on;
-    // Simpan mode string, bukan pointer
     strncpy(lastAirMode, (mode ? mode : ""), sizeof(lastAirMode) - 1);
     lastAirMode[sizeof(lastAirMode) - 1] = '\0';
 
-    drawTop(lcdHotAir, "HOT AIR", mode ? mode : "AIR", MAGENTA);
-    drawTempGraph(lcdHotAir, ct, tt, MAGENTA);
+    lcdHotAir.fillRectangle(0, 0, 160, 128, BLACK);
 
-    drawGauge(lcdHotAir, 47, 82, 25, "TEMP",
-              ct < 0 ? 0 : ct, "C", ORANGE);
+    drawBorder3D(lcdHotAir, 2, 2, 156, 124);
 
-    drawGauge(lcdHotAir, 113, 82, 25, "AIRFLOW",
-              fanPct, "%", CYAN);
+    // Title
+    printMini(lcdHotAir, "HOT AIR STATION", 10, 8, MAGENTA, BLACK);
+    printMini(lcdHotAir, mode ? mode : "AIR", 120, 8, LIGHTGREY, BLACK);
 
-    const bool fanOk = fanPct > 5;
-    drawStatus(lcdHotAir,
-               "READY",
-               on ? "HEAT ON" : "HEAT OFF",
-               fanOk ? "AIR OK" : "FAN 0",
-               true,
-               on,
-               fanOk);
+    // Big temperature
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", ct < 0 ? 0 : ct);
+    lcdHotAir.printString(buf, 18, 28, ORANGE, BLACK);
+    lcdHotAir.printString("C", 18 + strlen(buf)*8, 28, LIGHTGREY, BLACK);
+
+    // SET
+    snprintf(buf, sizeof(buf), "SET: %d C", tt);
+    printMini(lcdHotAir, buf, 18, 52, WHITE, BLACK);
+
+    // FAN bar
+    printMini(lcdHotAir, "FAN", 18, 68, LIGHTGREY, BLACK);
+    snprintf(buf, sizeof(buf), "%d%%", fanPct);
+    printMini(lcdHotAir, buf, 120, 68, CYAN, BLACK);
+    drawBar(lcdHotAir, 18, 80, 124, 10, fanPct, CYAN);
+
+    // Status
+    bool fanOk = fanPct > 5;
+    drawPill(lcdHotAir, 10,  100, 44, "READY",   true);
+    drawPill(lcdHotAir, 58,  100, 50, on ? "HEAT ON" : "HEAT OFF", on);
+    drawPill(lcdHotAir, 112, 100, 40, fanOk ? "AIR OK" : "FAN 0", fanOk);
 }
 
 // ============================================================
-// Init & Update
+// Init & Update (tetap sama)
 // ============================================================
 static void forceLcdCsHigh()
 {
@@ -260,10 +253,10 @@ void initLcdTemps()
     lcdHotAir.initDisplaySoft();
     forceLcdCsHigh();
 
-    // Landscape 160x128
     ready = true;
     lastDraw = 0;
 
+    // reset cache
     lastSolderCt = -999;
     lastSolderTt = -999;
     lastSolderPwm = -999;
@@ -285,7 +278,6 @@ void updateLcdTemps()
 {
     if (!ready) return;
     if (millis() - lastDraw < DRAW_MS) return;
-
     lastDraw = millis();
 
     drawSolderScreen(false);
