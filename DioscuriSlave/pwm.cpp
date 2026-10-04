@@ -34,7 +34,7 @@ void setPWM(int pwm) {
 
 void startTempRead() {
     heaterOff();
-    delayMicroseconds(200);
+    delayMicroseconds(250);
 }
 
 void endTempRead() {
