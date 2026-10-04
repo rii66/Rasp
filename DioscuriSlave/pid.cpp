@@ -18,7 +18,7 @@ const uint16_t SETTLING_DELAY_US    = 230;
 #else
 const uint8_t  ADC_SAMPLE_COUNT     = 24;
 const uint16_t ADC_SAMPLE_DELAY_US  = 40;
-const uint16_t SETTLING_DELAY_US    = 250;
+const uint16_t SETTLING_DELAY_US    = 270;
 #endif
 const int      HEATER_HYSTERESIS    = 5;
 const int      PID_INTEGRAL_LIMIT   = 500;
@@ -97,7 +97,7 @@ int readTemp() {
 
     // EMA sederhana (alpha \~0.3)
     if (filteredTemp < 0) filteredTemp = t;
-    else filteredTemp = (filteredTemp * 7 + t * 3) / 10;  // 70% lama + 30% baru
+    else filteredTemp = (filteredTemp * 8 + t * 2) / 10; //80% 
 
     return filteredTemp;
 }
