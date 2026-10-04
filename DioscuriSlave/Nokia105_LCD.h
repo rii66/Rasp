@@ -9,18 +9,18 @@
 
 // ============================================================
 //  Nokia 105 LCD - Full PIO 9-bit SPI for RP2040
-//  Dual / Quad ready (1 SM shared bus + separate CS)
-//  FIX: shared RST + longer CS timing
+//  Native: 128 x 160 portrait, X_OFFSET=2
+//  Dual ready (1 SM shared bus + separate CS)
 // ============================================================
 
 #ifndef NOKIA105_WIDTH
-#define NOKIA105_WIDTH  160
+#define NOKIA105_WIDTH  128
 #endif
 #ifndef NOKIA105_HEIGHT
-#define NOKIA105_HEIGHT 128
+#define NOKIA105_HEIGHT 160
 #endif
 #ifndef NOKIA105_X_OFFSET
-#define NOKIA105_X_OFFSET 0
+#define NOKIA105_X_OFFSET 2
 #endif
 #ifndef NOKIA105_Y_OFFSET
 #define NOKIA105_Y_OFFSET 0
@@ -28,9 +28,9 @@
 
 #define WIDTH                 NOKIA105_WIDTH
 #define HEIGHT                NOKIA105_HEIGHT
-#define nextLineEdge          152
+#define nextLineEdge          128
 #define spaceBetweenScanLines 16
-#define fullLengthVertical    112
+#define fullLengthVertical    160
 
 #define BLACK       0x0000
 #define NAVY        0x000F
@@ -56,10 +56,10 @@ class Nokia105 {
 public:
   Nokia105(int sda, int sck, int rst, int cs);
 
-  void begin(uint32_t freq_hz = 20000000);
+  void begin(uint32_t freq_hz = 4000000);
 
   void initDisplay();
-  void initDisplaySoft();   // software only (no hardware RST)
+  void initDisplaySoft();
   void reset();
   void displayOn();
   void displayOff();
