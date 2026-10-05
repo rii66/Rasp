@@ -43,11 +43,9 @@ void drawUI()
         drawTipPage   (640 - animX);
         drawBuzzerPage(768 - animX);
     }
-    u8g2.sendBuffer();  
-}
+    else {
+        drawOledDashboard();
+    }
 
-void drawOledDashboard() {
-  else
-    drawOledDashboard();
+    u8g2.sendBuffer();   // selalu di akhir
 }
-
