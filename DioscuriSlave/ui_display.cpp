@@ -31,7 +31,7 @@ void drawUI()
 
         int diff = targetX - animX;
         if (abs(diff) > 1)
-            animX += diff / 3;          // smooth side-scroll
+            animX += diff / 3;
         else
             animX = targetX;
 
@@ -43,7 +43,9 @@ void drawUI()
         drawTipPage   (640 - animX);
         drawBuzzerPage(768 - animX);
     }
-    // else: blank (Nokia yang jadi dashboard)
+    else {
+        drawOledDashboard();
+    }
 
-    u8g2.sendBuffer();
+    u8g2.sendBuffer();  
 }
