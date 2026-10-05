@@ -2,6 +2,6 @@
 #define OLED_DASHBOARD_H
 
 void initOledDashboard();
-void updateOledDashboard();
+void drawOledDashboard(); 
 
 #endif
