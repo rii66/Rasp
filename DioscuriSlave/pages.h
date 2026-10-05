@@ -14,28 +14,11 @@ enum Pages {
     PAGE_TOTAL
 };
 
-// Settings
+// Settings page — hanya SAVE / EXIT (STATION & TEMP dihapus)
 enum {
-    SET_STATION,
-    SET_TEMP,
-    SET_BOOST,
-    SET_SLEEP,
-    SET_CAL,
-    SET_PID,
-    SET_TIP,
-    SET_BUZZER,
     SET_SAVE,
     SET_EXIT,
     SET_COUNT
-};
-
-// Station submenu
-enum {
-    STATION_SOLDER,
-    STATION_HOTAIR,
-    STATION_SAVE,
-    STATION_EXIT,
-    STATION_COUNT
 };
 
 // PID
