@@ -46,7 +46,7 @@ void drawUI()
     u8g2.sendBuffer();  
 }
 
-void drawDashboard() {
+void drawOledDashboard() {
   else
     drawOledDashboard();
 }
