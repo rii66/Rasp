@@ -176,82 +176,96 @@ void executePageSelect() {
 void handleMenu(int direction, bool pressed) {
 
   static bool lastBtn = false;
+  static bool longPressDone = false;
 
   // =====================================================
-  // BUTTON LOGIC
+  // BUTTON PRESS START
   // =====================================================
   if (pressed && !lastBtn) {
     wakeFromSleep();
     btnPressStart = millis();
     btnHolding = true;
+    longPressDone = false;
   }
 
+  // =====================================================
+  // LONG PRESS: ACT ON HOLD, NOT ON RELEASE
+  // EC1: ~3 s => ENTER / EXIT MENU immediately.
+  // Once handled, release MUST NOT trigger Boost/click.
+  // =====================================================
+  if (pressed && btnHolding && !longPressDone) {
+    const unsigned long heldTime = millis() - btnPressStart;
+
+    if (heldTime >= 3000) {
+      longPressDone = true;
+
+      inMenu = !inMenu;
+      beepLong();
+
+      inEdit = false;
+      isEditingValue = false;
+      stationMenu = false;
+
+      if (inMenu) {
+        page = PAGE_SET;
+        item = 0;
+      }
+    }
+  }
+
+  // =====================================================
+  // BUTTON RELEASE
+  // =====================================================
   if (!pressed && lastBtn) {
+    const unsigned long holdTime = millis() - btnPressStart;
 
-    unsigned long holdTime = millis() - btnPressStart;
+    // Long press already executed while button was held.
+    // Therefore release is intentionally ignored.
+    if (holdTime > 50 && !longPressDone) {
 
-    if (holdTime > 50) {
+      // ===== SHORT PRESS =====
+      if (!inMenu) {
+        // Dashboard: SW1 = Boost solder.
+        activeStation = STATION_MODE_SOLDER;
+        startBoost();
+      } else {
 
-      // ===== LONG PRESS =====
-      if (holdTime >= 2100) {
-        inMenu = !inMenu;
-        beepLong();
-        inEdit = false;
-        isEditingValue = false;
-        stationMenu = false;
-
-        if (inMenu) {
-          page = PAGE_SET;
+        // ----- Submenu Station -----
+        if (stationMenu) {
+          if (stationItem == STATION_SOLDER) {
+            activeStation = STATION_MODE_SOLDER;
+            beepSelect();
+          }
+          else if (stationItem == STATION_HOTAIR) {
+            activeStation = STATION_MODE_HOTAIR;
+            beepSelect();
+          }
+          else if (stationItem == STATION_SAVE) {
+            beepSave();
+            stationMenu = false;
+          }
+          else if (stationItem == STATION_EXIT) {
+            stationMenu = false;
+            beepSelect();
+          }
+        }
+        else if (!inEdit) {
+          beepSelect();
+          inEdit = true;
           item = 0;
           stationMenu = false;
         }
-      }
-
-      // ===== SHORT PRESS =====
-      else {
-        if (!inMenu) {
-          // Dashboard: SW1 selalu Boost solder.
-          activeStation = STATION_MODE_SOLDER;
-          startBoost();
+        else if (!isEditingValue) {
+          executePageSelect();
         }
         else {
-          // ----- Submenu Station -----
-          if (stationMenu) {
-            if (stationItem == STATION_SOLDER) {
-              activeStation = STATION_MODE_SOLDER;
-              beepSelect();
-            }
-            else if (stationItem == STATION_HOTAIR) {
-              activeStation = STATION_MODE_HOTAIR;
-              beepSelect();
-            }
-            else if (stationItem == STATION_SAVE) {
-          //    saveSettings();
-              beepSave();
-              stationMenu = false;
-            }
-            else if (stationItem == STATION_EXIT) {
-              stationMenu = false;
-              beepSelect();
-            }
-          }
-          else if (!inEdit) {
-            beepSelect();
-            inEdit = true;
-            item = 0;
-            stationMenu = false;
-          }
-          else if (!isEditingValue) {
-            executePageSelect();
-          }
-          else {
-            isEditingValue = false;
-          }
+          isEditingValue = false;
         }
       }
     }
 
     btnHolding = false;
+    longPressDone = false;
   }
 
   lastBtn = pressed;
@@ -264,7 +278,7 @@ void handleMenu(int direction, bool pressed) {
   }
 
   // =======================================
-  //  SUBMENU STATION
+  // SUBMENU STATION
   // =======================================
   if (stationMenu) {
     if (direction != 0) {
@@ -283,7 +297,7 @@ void handleMenu(int direction, bool pressed) {
   if (direction == 0) return;
 
   // =======================================
-  // DASHBOARD: EC1 langsung mengatur solder.
+  // DASHBOARD: EC1 directly controls solder.
   // =======================================
   if (!inMenu) {
     activeStation = STATION_MODE_SOLDER;
@@ -293,7 +307,7 @@ void handleMenu(int direction, bool pressed) {
     return;
   }
 
-  // ===== LEVEL 1 : GANTI PAGE =====
+  // ===== LEVEL 1 : PAGE =====
   if (!inEdit) {
     page += direction;
 
@@ -302,9 +316,8 @@ void handleMenu(int direction, bool pressed) {
     beepMove();
   }
 
-  // ===== LEVEL 2 : PINDAH CURSOR =====
+  // ===== LEVEL 2 : ITEM =====
   else if (!isEditingValue) {
-
     item += direction;
 
     int maxItems = 1;
@@ -323,7 +336,7 @@ void handleMenu(int direction, bool pressed) {
     if (item < 0) item = maxItems - 1;
   }
 
-  // ===== LEVEL 3 : EDIT VALUE =====
+  // ===== LEVEL 3 : VALUE =====
   else {
     switch (page) {
 
@@ -343,9 +356,7 @@ void handleMenu(int direction, bool pressed) {
       case PAGE_BOOST:
         if (item == BOOST_TEMP) {
           boostTemp += (direction * 5);
-        // boostTemp = constrain(boostTemp, TEMP_MIN, maxTemp);  // Old
-        // New (izinkan di atas maxTemp )
-        boostTemp = constrain(boostTemp, TEMP_MIN, TEMP_MAX_CUSTOM);  // 600
+          boostTemp = constrain(boostTemp, TEMP_MIN, TEMP_MAX_CUSTOM);
         }
         else if (item == BOOST_TIME) {
           boostTimeSec += direction;
@@ -377,12 +388,10 @@ void handleMenu(int direction, bool pressed) {
         break;
 
       case PAGE_CAL:
-        // CAL_SOLDER → tempOffset solder, CAL_HOTAIR bisa offset HA terpisah
         if (item == CAL_SOLDER) {
           tempOffset += direction;
           tempOffset = constrain(tempOffset, -50, 50);
         }
-        // CAL_HOTAIR: sesuaikan variabel offset hotair jika sudah ada
         break;
     }
   }
