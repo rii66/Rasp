@@ -12,15 +12,11 @@
 #include "motion.h"
 #include "buzzer.h"
 
-//  API Hot Air sudah dideklarasikan oleh handler.h.
-
-
 //====================================//
-//             .MENU HANDLER               //
+//             MENU HANDLER            //
 //====================================//
 
-// ===== Cursor tiap halaman =====
-int mainMenuIndex  = 0;
+// Cursor tiap halaman (untuk restore posisi)
 int boostMenuIndex = 0;
 int sleepMenuIndex = 0;
 int pidMenuIndex   = 0;
@@ -28,12 +24,8 @@ int tipMenuIndex   = 0;
 int buzMenuIndex   = 0;
 int calMenuIndex   = 0;
 
-// Cursor khusus submenu Station (Solder / Hot Air)
-static int stationItem = STATION_SOLDER;
-static bool stationMenu = false;
-
 // =========================================================
-// SIMPAN POSISI CURSOR SUBMENU
+// SIMPAN POSISI CURSOR
 // =========================================================
 void saveMenuCursor() {
   switch (page) {
@@ -43,6 +35,7 @@ void saveMenuCursor() {
     case PAGE_PID:    pidMenuIndex   = item; break;
     case PAGE_TIP:    tipMenuIndex   = item; break;
     case PAGE_BUZZER: buzMenuIndex   = item; break;
+    default: break;
   }
 }
 
@@ -55,7 +48,7 @@ void executePageSelect() {
 
   switch (page) {
 
-    // ===== SETTING =====
+    // ===== SET (hanya SAVE / EXIT) =====
     case PAGE_SET:
       if (item == SET_SAVE || item == SET_EXIT) {
         saveSettings();
@@ -63,23 +56,12 @@ void executePageSelect() {
         beepSave();
         inEdit = false;
       }
-      else if (item == SET_STATION) {
-        // Masuk submenu Station
-        stationItem = (activeStation == STATION_MODE_HOTAIR)
-                      ? STATION_HOTAIR
-                      : STATION_SOLDER;
-        stationMenu = true;
-      }
-      else if (item == SET_TEMP) {
-        isEditingValue = true;
-      }
-      // item lain (BOOST/SLEEP/...) — biarkan navigasi page via swipe
       break;
 
     // ===== BOOST =====
     case PAGE_BOOST:
       if (item == BOOST_SAVE || item == BOOST_EXIT) {
-      saveBoost();
+        saveBoost();
         storageFlush();
         beepSave();
         inEdit = false;
@@ -91,7 +73,7 @@ void executePageSelect() {
     // ===== SLEEP =====
     case PAGE_SLEEP:
       if (item == SLEEP_SAVE || item == SLEEP_EXIT) {
-      saveSleep();
+        saveSleep();
         storageFlush();
         beepSave();
         inEdit = false;
@@ -103,7 +85,7 @@ void executePageSelect() {
     // ===== CALIBRATION =====
     case PAGE_CAL:
       if (item == CAL_SAVE || item == CAL_EXIT) {
-      saveCal();
+        saveCal();
         storageFlush();
         beepSave();
         inEdit = false;
@@ -116,7 +98,7 @@ void executePageSelect() {
     // ===== PID =====
     case PAGE_PID:
       if (item == PID_SAVE || item == PID_EXIT) {
-      saveActivePID();
+        saveActivePID();
         storageFlush();
         beepSave();
         inEdit = false;
@@ -155,7 +137,7 @@ void executePageSelect() {
     // ===== BUZZER =====
     case PAGE_BUZZER:
       if (item == BUZ_SAVE || item == BUZ_EXIT) {
-     saveBuzzer();
+        saveBuzzer();
         storageFlush();
         beepSave();
         inEdit = false;
@@ -189,9 +171,7 @@ void handleMenu(int direction, bool pressed) {
   }
 
   // =====================================================
-  // LONG PRESS: ACT ON HOLD, NOT ON RELEASE
-  // EC1: ~3 s => ENTER / EXIT MENU immediately.
-  // Once handled, release MUST NOT trigger Boost/click.
+  // LONG PRESS: 3 detik = toggle menu (tetap seperti Dioscuri)
   // =====================================================
   if (pressed && btnHolding && !longPressDone) {
     const unsigned long heldTime = millis() - btnPressStart;
@@ -204,7 +184,6 @@ void handleMenu(int direction, bool pressed) {
 
       inEdit = false;
       isEditingValue = false;
-      stationMenu = false;
 
       if (inMenu) {
         page = PAGE_SET;
@@ -219,46 +198,28 @@ void handleMenu(int direction, bool pressed) {
   if (!pressed && lastBtn) {
     const unsigned long holdTime = millis() - btnPressStart;
 
-    // Long press already executed while button was held.
-    // Therefore release is intentionally ignored.
+    // Long press sudah dieksekusi saat hold → abaikan release
     if (holdTime > 50 && !longPressDone) {
 
       // ===== SHORT PRESS =====
       if (!inMenu) {
-        // Dashboard: SW1 = Boost solder.
+        // Dashboard: SW1 = Boost solder
         activeStation = STATION_MODE_SOLDER;
         startBoost();
       } else {
 
-        // ----- Submenu Station -----
-        if (stationMenu) {
-          if (stationItem == STATION_SOLDER) {
-            activeStation = STATION_MODE_SOLDER;
-            beepSelect();
-          }
-          else if (stationItem == STATION_HOTAIR) {
-            activeStation = STATION_MODE_HOTAIR;
-            beepSelect();
-          }
-          else if (stationItem == STATION_SAVE) {
-            beepSave();
-            stationMenu = false;
-          }
-          else if (stationItem == STATION_EXIT) {
-            stationMenu = false;
-            beepSelect();
-          }
-        }
-        else if (!inEdit) {
+        if (!inEdit) {
+          // Masuk mode edit halaman saat ini
           beepSelect();
           inEdit = true;
           item = 0;
-          stationMenu = false;
         }
         else if (!isEditingValue) {
+          // Eksekusi item yang dipilih
           executePageSelect();
         }
         else {
+          // Selesai edit value
           isEditingValue = false;
         }
       }
@@ -277,27 +238,10 @@ void handleMenu(int direction, bool pressed) {
     wakeFromSleep();
   }
 
-  // =======================================
-  // SUBMENU STATION
-  // =======================================
-  if (stationMenu) {
-    if (direction != 0) {
-      stationItem += direction;
-
-      if (stationItem < 0)
-        stationItem = STATION_COUNT - 1;
-      if (stationItem >= STATION_COUNT)
-        stationItem = 0;
-
-      beepMove();
-    }
-    return;
-  }
-
   if (direction == 0) return;
 
   // =======================================
-  // DASHBOARD: EC1 directly controls solder.
+  // DASHBOARD: EC1 langsung kontrol suhu solder
   // =======================================
   if (!inMenu) {
     activeStation = STATION_MODE_SOLDER;
@@ -307,7 +251,7 @@ void handleMenu(int direction, bool pressed) {
     return;
   }
 
-  // ===== LEVEL 1 : PAGE =====
+  // ===== LEVEL 1 : PAGE (side-scroll) =====
   if (!inEdit) {
     page += direction;
 
@@ -334,24 +278,12 @@ void handleMenu(int direction, bool pressed) {
 
     if (item >= maxItems) item = 0;
     if (item < 0) item = maxItems - 1;
+    beepMove();
   }
 
   // ===== LEVEL 3 : VALUE =====
   else {
     switch (page) {
-
-      case PAGE_SET:
-        if (item == SET_TEMP) {
-          if (activeStation == STATION_MODE_HOTAIR) {
-            int t = airGetTargetTemp() + (direction * 5);
-            t = constrain(t, TEMP_MIN, TEMP_MAX_HOTAIR);
-            airSetTemp((uint16_t)t);
-          } else {
-            targetTemp += (direction * 5);
-            targetTemp = constrain(targetTemp, TEMP_MIN, maxTemp);
-          }
-        }
-        break;
 
       case PAGE_BOOST:
         if (item == BOOST_TEMP) {
@@ -377,13 +309,13 @@ void handleMenu(int direction, bool pressed) {
 
       case PAGE_PID:
         if (item == PID_KP) {
-          kp = constrain(kp + (direction * 0.1), 0.0, 999.0);
+          kp = constrain(kp + (direction * 0.1f), 0.0f, 999.0f);
         }
         else if (item == PID_KI) {
-          ki = constrain(ki + (direction * 0.01), 0.0, 999.0);
+          ki = constrain(ki + (direction * 0.01f), 0.0f, 999.0f);
         }
         else if (item == PID_KD) {
-          kd = constrain(kd + (direction * 1.0), 0.0, 999.0);
+          kd = constrain(kd + (direction * 1.0f), 0.0f, 999.0f);
         }
         break;
 
@@ -392,11 +324,8 @@ void handleMenu(int direction, bool pressed) {
           tempOffset += direction;
           tempOffset = constrain(tempOffset, -50, 50);
         }
+        // CAL_HOTAIR masih placeholder (belum ada offset hotair)
         break;
     }
   }
 }
-
-// Getter supaya UI bisa baca cursor station
-int getStationItem() { return stationItem; }
-bool isStationMenu() { return stationMenu; }
