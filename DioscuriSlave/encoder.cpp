@@ -62,14 +62,16 @@ bool button2Pressed() {
 }
 
 int getEncoderDelta() {
-  static int lastLogicPos = 0;
   int currentLogicPos = encoderPos / 4;
+  static int lastLogicPos = currentLogicPos;
+
   int diff = currentLogicPos - lastLogicPos;
 
   if (diff != 0) {
     lastLogicPos = currentLogicPos;
     return diff;
   }
+
   return 0;
 }
 
