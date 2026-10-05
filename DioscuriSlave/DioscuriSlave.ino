@@ -1,6 +1,6 @@
 /**
  * Dioscuri SLAVE — RP2040
- * Port lean dari Dioscurios V1
+ * 
  * master ESP opsional via UART
  */
 #include <Arduino.h>
@@ -22,7 +22,8 @@
 #include "pages.h"
 #include "uart_link.h"
 #include "lcd_temps.h"
-#include "oled_ui.h"
+#include "ui_display.h"
+#include "oled_dashboard.h"
 #include "platform_compat.h"
 #include "monitoring.h"
 
@@ -73,7 +74,8 @@ void setup() {
     initUartLink();
     monitorBoot(F("UART slave / waiting master"));
 
-    initOledUI();
+    initDisplay();          // U8g2 + Wire
+    initOledDashboard();    // opsional (cek perbedaan aja :D)
     monitorBoot(F("OLED"));
 
     lastActivity = millis();
@@ -153,7 +155,7 @@ void loop() {
 
     storage.tick();
     updateLcdTemps();
-    updateOledUI();
+    drawUI();           
 
     monitorInput(enc1Delta, airDelta);
     monitorRuntime();
