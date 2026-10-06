@@ -48,15 +48,41 @@ void executePageSelect() {
 
   switch (page) {
 
-    // ===== SET (hanya SAVE / EXIT) =====
-    case PAGE_SET:
-      if (item == SET_SAVE || item == SET_EXIT) {
-        saveSettings();
-        storageFlush();
-        beepSave();
-        inEdit = false;
+    // ===== SET =====
+case PAGE_SET:
+  if (item == SET_SAVE) {
+    saveSettings();
+    storageFlush();
+    beepSave();
+    inEdit = false;
+    confirmBootsel = false;
+  }
+  else if (item == SET_BOOTSEL) {
+    if (!confirmBootsel) {
+      // Masuk mode konfirmasi
+      confirmBootsel = true;
+      item = 0;               // default pilih "Yes"
+      beepSelect();
+    } else {
+      // Sudah di mode konfirmasi
+      if (item == 0) {
+        // Yes → masuk BOOTSEL
+        beepLong();
+        delay(400);
+        rp2040.rebootToBootloader();
+      } else {
+        // Exit → kembali ke menu SET
+        confirmBootsel = false;
+        item = SET_BOOTSEL;
+        beepSelect();
       }
-      break;
+    }
+  }
+  else if (item == SET_EXIT) {
+    confirmBootsel = false;
+    inEdit = false;
+  }
+  break;
 
     // ===== BOOST =====
     case PAGE_BOOST:
