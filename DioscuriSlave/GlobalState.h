@@ -124,4 +124,6 @@ enum StationMode {
 
 extern StationMode activeStation;
 
+// ================= BOOTSEL ============
+extern bool confirmBootsel;
 #endif
