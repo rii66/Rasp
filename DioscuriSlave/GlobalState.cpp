@@ -96,7 +96,6 @@ int pwmOut = 0;
 
 
 // ================= PID =================
-
 // Nilai sebenarnya akan diisi setelah profile tip aktif.
 
 float kp = 0.0f;
@@ -104,3 +103,6 @@ float ki = 0.0f;
 float kd = 0.0f;
 
 StationMode activeStation = STATION_MODE_SOLDER;
+
+// ================= BOOTSEL ============
+bool confirmBootsel = false;
