@@ -23,7 +23,7 @@ void drawCurrentTemp(int x)
 }
 
 // ====================================================
-// SET PAGE  (hanya SAVE / EXIT + current temp)
+// SET PAGE  Hapus switch station & tambah mode BOOTSEL
 // ====================================================
 void drawSetPage(int x)
 {
@@ -38,33 +38,74 @@ void drawSetPage(int x)
         return;
     }
 
-    // Header
+    // ==============================
+    // MODE KONFIRMASI BOOTSEL
+    // ==============================
+    if (confirmBootsel) {
+        u8g2.setFont(u8g2_font_6x10_tf);
+        u8g2.drawStr(x + 28, 28, "BOOTSEL ?");
+
+        // Yes
+        if (item == 0) {
+            u8g2.drawBox(x + 20, 42, 36, 12);
+            u8g2.setDrawColor(0);
+            u8g2.drawStr(x + 28, 51, "Yes");
+            u8g2.setDrawColor(1);
+        } else {
+            u8g2.drawStr(x + 28, 51, "Yes");
+        }
+
+        // Exit
+        if (item == 1) {
+            u8g2.drawBox(x + 72, 42, 36, 12);
+            u8g2.setDrawColor(0);
+            u8g2.drawStr(x + 80, 51, "Exit");
+            u8g2.setDrawColor(1);
+        } else {
+            u8g2.drawStr(x + 80, 51, "Exit");
+        }
+        return;
+    }
+
+    // ==============================
+    // MODE NORMAL (SAVE / BOOTSEL / EXIT)
+    // ==============================
     u8g2.setFont(u8g2_font_6x10_tf);
     u8g2.drawLine(x, 12, x + 127, 12);
 
     // SAVE
     if (item == SET_SAVE) {
-        u8g2.drawBox(x + 4, 2, 40, 8);
+        u8g2.drawBox(x + 4, 2, 36, 8);
         u8g2.setDrawColor(0);
-        u8g2.drawStr(x + 10, 9, "SAVE");
+        u8g2.drawStr(x + 8, 9, "SAVE");
         u8g2.setDrawColor(1);
     } else {
-        u8g2.drawStr(x + 10, 9, "SAVE");
+        u8g2.drawStr(x + 8, 9, "SAVE");
+    }
+
+    // BOOTSEL
+    if (item == SET_BOOTSEL) {
+        u8g2.drawBox(x + 46, 2, 40, 8);
+        u8g2.setDrawColor(0);
+        u8g2.drawStr(x + 50, 9, "BOOT");
+        u8g2.setDrawColor(1);
+    } else {
+        u8g2.drawStr(x + 50, 9, "BOOT");
     }
 
     // EXIT
     if (item == SET_EXIT) {
-        u8g2.drawBox(x + 84, 2, 40, 8);
+        u8g2.drawBox(x + 92, 2, 32, 8);
         u8g2.setDrawColor(0);
-        u8g2.drawStr(x + 92, 9, "EXIT");
+        u8g2.drawStr(x + 96, 9, "EXIT");
         u8g2.setDrawColor(1);
     } else {
-        u8g2.drawStr(x + 92, 9, "EXIT");
+        u8g2.drawStr(x + 96, 9, "EXIT");
     }
 
     drawCurrentTemp(x);
 
-    // Body info (hanya info, tidak editable)
+    // Body info
     u8g2.setFont(u8g2_font_6x10_tf);
     u8g2.drawStr(x + 16, 28, "SOLDER / HOTAIR");
     u8g2.drawStr(x + 16, 42, "via Encoder");
