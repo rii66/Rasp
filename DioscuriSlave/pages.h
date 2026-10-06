@@ -14,9 +14,10 @@ enum Pages {
     PAGE_TOTAL
 };
 
-// Settings page — hanya SAVE / EXIT (STATION & TEMP dihapus)
+// Settings page 
 enum {
     SET_SAVE,
+    SET_BOOTSEL,      // Bootsel Flash
     SET_EXIT,
     SET_COUNT
 };
