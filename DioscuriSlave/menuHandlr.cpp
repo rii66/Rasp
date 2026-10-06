@@ -293,7 +293,10 @@ void handleMenu(int direction, bool pressed) {
     int maxItems = 1;
 
     switch (page) {
-      case PAGE_SET:    maxItems = SET_COUNT;   break;
+      case PAGE_SET:
+      if (confirmBootsel) maxItems = 2;     // Yes & Exit
+      else maxItems = SET_COUNT;
+      break;
       case PAGE_BOOST:  maxItems = BOOST_COUNT; break;
       case PAGE_SLEEP:  maxItems = SLEEP_COUNT; break;
       case PAGE_CAL:    maxItems = CAL_COUNT;   break;
