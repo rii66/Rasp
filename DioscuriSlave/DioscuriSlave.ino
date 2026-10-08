@@ -75,7 +75,7 @@ void setup() {
     monitorBoot(F("UART slave / waiting master"));
 
     initDisplay();          // U8g2 + Wire
-    initOledDashboard();    // opsional (cek perbedaan aja :D)
+
     monitorBoot(F("OLED"));
 
     lastActivity = millis();
