@@ -43,7 +43,7 @@ void setup() {
     Serial.println(F("\r\n========== Dioscuri SLAVE RP2040 =========="));
     monitorBoot(F("USB Serial"));
 
-    // LCD paling awal: sama dengan jalur debug display/pio.
+    // LCDdebug display/pio. jangan disini
     initLcdTemps();
     monitorBoot(F("Nokia 1 / 2"));
 
