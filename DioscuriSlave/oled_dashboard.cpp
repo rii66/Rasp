@@ -69,11 +69,6 @@ void drawOledDashboard()
     u8g2.drawStr(100, 56, buf);
 }
 
-void initOledDashboard()
-{
-    // Init sudah dilakukan di initDisplay() (ui_display.cpp)
-}
-
 void updateOledDashboard()
 {
     // (drawUI di ui_display.cpp yang mengatur clearBuffer + sendBuffer)
