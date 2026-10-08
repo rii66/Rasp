@@ -10,7 +10,7 @@
 // Port dari Dioscurios V1 — tanpa umbrella / tanpa network
 // ============================================================
 
-#define FIRMWARE_ROLE_SLAVE  1
+// #define FIRMWARE_ROLE_SLAVE  1
 
 // ---- UART → master C3 ----
 #define PIN_UART_TX          20   // GP20 // physical 26
