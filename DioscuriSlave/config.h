@@ -10,7 +10,7 @@
 // Port dari Dioscurios V1 —
 // ============================================================
 
-#define FIRMWARE_ROLE_SLAVE  1
+// #define FIRMWARE_ROLE_SLAVE  1
 
 // ---- UART → master C3 ----
 #define PIN_UART_TX          20   // GP20 // physical 26
@@ -20,18 +20,18 @@
 // ============================================================
 // Nokia LCD (shared SPI)
 // ============================================================
-#define PIN_LCD_CS1           0   // GP0  // physical 1
-#define PIN_LCD_CS2           1   // GP1  // physical 2
+#define PIN_LCD_CS1           2
+#define PIN_LCD_CS2           6
 
-#define PIN_LCD_SDA           2   // GP2  // physical 4
+#define PIN_LCD_SDA           4
 #define PIN_LCD_SCK           3   // GP3  // physical 5
-#define PIN_LCD_RESET         4   // GP4  // physical 6
+#define PIN_LCD_RESET         5
 
 // ============================================================
 // OLED I2C
 // ============================================================
-#define PIN_OLED_SCL          5   // GP5  // physical 7
-#define PIN_OLED_SDA          6   // GP6  // physical 9
+#define PIN_OLED_SCL          0
+#define PIN_OLED_SDA          1
 
 // ============================================================
 // Encoder dual
