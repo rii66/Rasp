@@ -21,7 +21,7 @@
 #define PIN_LCD_SCK           0   //   physical   debug dulu
 #define PIN_LCD_SDA           1   //   physical   debug dulu
 #define PIN_LCD_CS1           2   //   physical   debug dulu
-#define PIN_LCD_CS2           3   //   physical   debug dulu
+#define PIN_LCD_CS2           13   //   physical   debug dulu
 #define PIN_LCD_RESET         4   //   physical   debug dulu
 
 // ---- OLED I2C ----
