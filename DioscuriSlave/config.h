@@ -22,8 +22,9 @@
 // ============================================================
 #define PIN_LCD_CS1           0   // GP0  // physical 1
 #define PIN_LCD_CS2           1   // GP1  // physical 2
-#define PIN_LCD_SCK           2   // GP2  // physical 4
-#define PIN_LCD_SDA           3   // GP3  // physical 5
+
+#define PIN_LCD_SDA           2   // GP2  // physical 4
+#define PIN_LCD_SCK           3   // GP3  // physical 5
 #define PIN_LCD_RESET         4   // GP4  // physical 6
 
 // ============================================================
@@ -66,7 +67,7 @@
 
 // ---- Buzzer / future relay ----
 #define BUZZER_PIN           13   // GP13 // physical 17
-//#define PIN_AC_RELAY         2
+//#define PIN_AC_RELAY         x
 
 // ---- PID defaults ----
 #define PID_KP_T12           3.2f
