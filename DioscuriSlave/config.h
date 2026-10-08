@@ -18,14 +18,14 @@
 #define UART_BAUD            115200
 
 // ---- Nokia LCD (shared SPI) ----
-#define PIN_LCD_SCK           0   //   physical   debug dulu
-#define PIN_LCD_SDA           1   //   physical   debug dulu
-#define PIN_LCD_CS1           12   //   physical   debug dulu
-#define PIN_LCD_CS2           13   //   physical   debug dulu
-#define PIN_LCD_RESET         4   //   physical   debug dulu
+#define PIN_LCD_SCK           2   //   physical   debug dulu
+#define PIN_LCD_SDA           3   //   physical   debug dulu
+#define PIN_LCD_CS1           0   //   physical   debug dulu
+#define PIN_LCD_CS2           1   //   physical   debug dulu
+#define PIN_LCD_RESET         6   //   physical   debug dulu
 
 // ---- OLED I2C ----
-#define PIN_OLED_SDA          6   //   physical   6
+#define PIN_OLED_SDA          4   //   physical   6
 #define PIN_OLED_SCL          5   //   physical   7
 
 // ---- Encoder dual ----
