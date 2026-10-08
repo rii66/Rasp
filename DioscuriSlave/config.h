@@ -6,11 +6,11 @@
 
 // ============================================================
 // Dioscuri SLAVE — RP2040 (real-time only)
-// Master ESP32-C3: UI / WiFi / Web via UART
-// Port dari Dioscurios V1 — tanpa umbrella / tanpa network
+// Master ESP32-C3: Psu Lab / WiFi / Web via UART 
+// Port dari Dioscurios V1 —
 // ============================================================
 
-// #define FIRMWARE_ROLE_SLAVE  1
+#define FIRMWARE_ROLE_SLAVE  1
 
 // ---- UART → master C3 ----
 #define PIN_UART_TX          20   // GP20 // physical 26
