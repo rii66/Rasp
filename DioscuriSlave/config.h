@@ -12,62 +12,49 @@
 
 // #define FIRMWARE_ROLE_SLAVE  1
 
-// ---- UART → master C3 ----
+// ---- UART ----
 #define PIN_UART_TX          20   // GP20 // physical 26
-#define PIN_UART_RX          21   // GP21 // physical 27
+#define PIN_UART_TX          20   //  physical   26
+#define PIN_UART_RX          21   //  physical   27
 #define UART_BAUD            115200
 
-// ============================================================
-// Nokia LCD (shared SPI)
-// ============================================================
-#define PIN_LCD_CS1           2
-#define PIN_LCD_CS2           6
+// ---- Nokia LCD (shared SPI) ----
+#define PIN_LCD_SCK           0   //   physical   1
+#define PIN_LCD_SDA           1   //   physical   2
+#define PIN_LCD_CS1           12   //   physical   16
+#define PIN_LCD_CS2           14   //  physical   19
+#define PIN_LCD_RESET         6   //    physical   9
 
-#define PIN_LCD_SDA           4
-#define PIN_LCD_SCK           3   // GP3  // physical 5
-#define PIN_LCD_RESET         5
+// ---- OLED I2C ----
+#define PIN_OLED_SDA          4   //   physical   6
+#define PIN_OLED_SCL          5   //   physical   7
 
-// ============================================================
-// OLED I2C
-// ============================================================
-#define PIN_OLED_SCL          0
-#define PIN_OLED_SDA          1
+// ---- Encoder dual ----
+#define ENC_A                 7   //   physical   10
+#define ENC_B                 8   //   physical   11
+#define ENC_SW                9   //   physical   12
 
-// ============================================================
-// Encoder dual
-// ============================================================
-#define ENC_A                 7   // GP7  // physical 10
-#define ENC_B                 8   // GP8  // physical 11
-#define ENC_SW                9   // GP9  // physical 12
+#define PIN_ENC2_A           10   //  physical   14
+#define PIN_ENC2_B           11   //  physical   15
+#define PIN_ENC2_SW          3   //  physical   5
 
-#define PIN_ENC2_A           10   // GP10 // physical 14
-#define PIN_ENC2_B           11   // GP11 // physical 15
-#define PIN_ENC2_SW          12   // GP12 // physical 16
+// ---- Analog / sleep ----
+#define PIN_POT_FAN          28   //  physical   34
+#define MOTION_PIN           15   //  physical   20
+#define PIN_SLEEP2           16   //  physical   21
 
-// ============================================================
-// Analog / sleep
-// ============================================================
-#define PIN_POT_FAN          28   // GP28/ADC2 // physical 34
-#define MOTION_PIN           15   // GP15 // physical 20
-#define PIN_SLEEP2           16   // GP16 // physical 21
+#define TEMP_PIN             26   //  physical   31
+#define PIN_HOTAIR_ADC       27   //  physical   32
 
-// ============================================================
-// Solder
-// ============================================================
-#define TEMP_PIN             26   // GP26/ADC0 // physical 31
-#define PWM_PIN              17   // GP17 // physical 22
-
-// ============================================================
-// Hot Air
-// ============================================================
-#define PIN_HOTAIR_ADC       27   // GP27/ADC1 // physical 32
-#define PIN_FAN_PWM          19   // GP19 // physical 25
-#define PIN_HEATER_AC        18   // GP18 // physical 24
-#define PIN_ZERO_CROSS       22   // GP22 // physical 29
+// ---- PWM / heater ----
+#define PWM_PIN              17   //  physical   22
+#define PIN_HEATER_AC        18   //  physical   24
+#define PIN_FAN_PWM          19
+#define PIN_ZERO_CROSS       22   //   physical   29
 
 // ---- Buzzer / future relay ----
-#define BUZZER_PIN           13   // GP13 // physical 17
-//#define PIN_AC_RELAY         x
+#define BUZZER_PIN           13   //   physical   17
+//#define PIN_AC_RELAY         ×
 
 // ---- PID defaults ----
 #define PID_KP_T12           3.2f
