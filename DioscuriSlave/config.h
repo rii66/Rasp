@@ -20,7 +20,7 @@
 // ---- Nokia LCD (shared SPI) ----
 #define PIN_LCD_SCK           0   //   physical   debug dulu
 #define PIN_LCD_SDA           1   //   physical   debug dulu
-#define PIN_LCD_CS1           2   //   physical   debug dulu
+#define PIN_LCD_CS1           12   //   physical   debug dulu
 #define PIN_LCD_CS2           13   //   physical   debug dulu
 #define PIN_LCD_RESET         4   //   physical   debug dulu
 
@@ -35,7 +35,7 @@
 
 #define PIN_ENC2_A           10   //  physical   14
 #define PIN_ENC2_B           11   //  physical   15
-#define PIN_ENC2_SW          12   //  physical    5
+#define PIN_ENC2_SW          14   //  physical    5
 
 // ---- Analog / sleep ----
 #define PIN_POT_FAN          28   //  physical   34
@@ -52,7 +52,7 @@
 #define PIN_ZERO_CROSS       22   //   physical   29
 
 // ---- Buzzer / future relay ----
-#define BUZZER_PIN           14   //   physical   17
+#define BUZZER_PIN           3   //   physical   17
 //#define PIN_AC_RELAY         ×
 
 // ---- PID defaults ----
