@@ -13,20 +13,19 @@
 // #define FIRMWARE_ROLE_SLAVE  1
 
 // ---- UART ----
-#define PIN_UART_TX          20   // GP20 // physical 26
 #define PIN_UART_TX          20   //  physical   26
 #define PIN_UART_RX          21   //  physical   27
 #define UART_BAUD            115200
 
 // ---- Nokia LCD (shared SPI) ----
-#define PIN_LCD_SCK           0   //   physical   1
-#define PIN_LCD_SDA           1   //   physical   2
-#define PIN_LCD_CS1           12   //   physical   16
-#define PIN_LCD_CS2           14   //  physical   19
-#define PIN_LCD_RESET         6   //    physical   9
+#define PIN_LCD_SCK           0   //   physical   debug dulu
+#define PIN_LCD_SDA           1   //   physical   debug dulu
+#define PIN_LCD_CS1           2   //   physical   debug dulu
+#define PIN_LCD_CS2           3   //   physical   debug dulu
+#define PIN_LCD_RESET         4   //   physical   debug dulu
 
 // ---- OLED I2C ----
-#define PIN_OLED_SDA          4   //   physical   6
+#define PIN_OLED_SDA          6   //   physical   6
 #define PIN_OLED_SCL          5   //   physical   7
 
 // ---- Encoder dual ----
@@ -36,7 +35,7 @@
 
 #define PIN_ENC2_A           10   //  physical   14
 #define PIN_ENC2_B           11   //  physical   15
-#define PIN_ENC2_SW          3   //  physical   5
+#define PIN_ENC2_SW          12   //  physical    5
 
 // ---- Analog / sleep ----
 #define PIN_POT_FAN          28   //  physical   34
@@ -53,7 +52,7 @@
 #define PIN_ZERO_CROSS       22   //   physical   29
 
 // ---- Buzzer / future relay ----
-#define BUZZER_PIN           13   //   physical   17
+#define BUZZER_PIN           14   //   physical   17
 //#define PIN_AC_RELAY         ×
 
 // ---- PID defaults ----
