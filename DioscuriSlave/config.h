@@ -5,28 +5,28 @@
 #include <stdint.h>
 
 // ============================================================
-// Dioscuri SLAVE — RP2040 (real-time only)
-// Master ESP32-C3: Psu Lab / WiFi / Web via UART 
+// Dioscuri SLAVE — RP2040 
+// Master ESP Psu Lab / WiFi / Web via UART 
 // Port dari Dioscurios V1 —
 // ============================================================
 
-// #define FIRMWARE_ROLE_SLAVE  1
+// FIRMWARE_ROLE_SLAVE  1
 
 // ---- UART ----
 #define PIN_UART_TX          20   //  physical   26
 #define PIN_UART_RX          21   //  physical   27
 #define UART_BAUD            115200
 
-// ---- Nokia LCD (shared SPI) ----
-#define PIN_LCD_SCK           2   //   physical   debug dulu
-#define PIN_LCD_SDA           3   //   physical   debug dulu
+// ---- DISPLAY ----
 #define PIN_LCD_CS1           0   //   physical   debug dulu
 #define PIN_LCD_CS2           1   //   physical   debug dulu
-#define PIN_LCD_RESET         6   //   physical   debug dulu
-
+#define PIN_LCD_SCK           2   //   physical   debug dulu
+#define PIN_LCD_SDA           3   //   physical   debug dulu
 // ---- OLED I2C ----
 #define PIN_OLED_SDA          4   //   physical   6
 #define PIN_OLED_SCL          5   //   physical   7
+
+#define PIN_LCD_RESET         6   //   physical   debug dulu
 
 // ---- Encoder dual ----
 #define ENC_A                 7   //   physical   10
@@ -53,7 +53,7 @@
 
 // ---- Buzzer / future relay ----
 #define BUZZER_PIN           13   //   physical   17
-//#define PIN_AC_RELAY         ×
+//#define PIN_AC_RELAY or LCD REST ( JIKA GLITCH )       ×
 
 // ---- PID defaults ----
 #define PID_KP_T12           3.2f
