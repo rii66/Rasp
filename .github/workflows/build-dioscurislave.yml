@@ -1,0 +1,64 @@
+name: Build DioscuriSlave (RP2040)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "DioscuriSlave/**"
+      - ".github/workflows/build-dioscurislave.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install RP2040 core and libraries
+        run: |
+          arduino-cli config init
+          arduino-cli core update-index --additional-urls https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
+          arduino-cli core install rp2040:rp2040 --additional-urls https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
+          arduino-cli lib update-index
+          arduino-cli lib install U8g2
+
+      - name: Compile for Raspberry Pi Pico
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/build/DioscuriSlave"
+          arduino-cli compile \
+            --fqbn rp2040:rp2040:rpipico \
+            --warnings all \
+            --export-binaries \
+            --output-dir "$GITHUB_WORKSPACE/build/DioscuriSlave" \
+            "$GITHUB_WORKSPACE/DioscuriSlave"
+
+      - name: Verify firmware outputs
+        run: |
+          echo "Build output:"
+          find build/DioscuriSlave -maxdepth 2 -type f -printf '%f\n' | sort
+          for ext in uf2 bin hex; do
+            if ! find build/DioscuriSlave -type f -name "*.$ext" -print -quit | grep -q .; then
+              echo "::error::Expected .$ext firmware output was not generated"
+              exit 1
+            fi
+          done
+
+      - name: Upload UF2, BIN and HEX
+        uses: actions/upload-artifact@v4
+        with:
+          name: DioscuriSlave-RP2040-firmware
+          path: |
+            build/DioscuriSlave/**/*.uf2
+            build/DioscuriSlave/**/*.bin
+            build/DioscuriSlave/**/*.hex
+          if-no-files-found: error
+          retention-days: 30
