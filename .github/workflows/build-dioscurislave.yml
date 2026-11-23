@@ -41,6 +41,17 @@ jobs:
             --output-dir "$GITHUB_WORKSPACE/build/DioscuriSlave" \
             "$GITHUB_WORKSPACE/DioscuriSlave"
 
+      - name: Generate Intel HEX from ELF
+        run: |
+          OBJCOPY="$(find "$HOME/.arduino15/packages/rp2040/tools" -type f -name arm-none-eabi-objcopy -print -quit)"
+          if [ -z "$OBJCOPY" ]; then
+            echo "::error::arm-none-eabi-objcopy not found in the installed RP2040 toolchain"
+            exit 1
+          fi
+          "$OBJCOPY" -O ihex \
+            "$GITHUB_WORKSPACE/build/DioscuriSlave/DioscuriSlave.ino.elf" \
+            "$GITHUB_WORKSPACE/build/DioscuriSlave/DioscuriSlave.ino.hex"
+
       - name: Verify firmware outputs
         run: |
           echo "Build output:"
