@@ -1,4 +1,4 @@
-name: Build DioscuriSlave (RP2040)
+name: Build DioscuriSlave UF2 (RP2040)
 
 on:
   workflow_dispatch:
@@ -41,35 +41,17 @@ jobs:
             --output-dir "$GITHUB_WORKSPACE/build/DioscuriSlave" \
             "$GITHUB_WORKSPACE/DioscuriSlave"
 
-      - name: Generate Intel HEX from ELF
+      - name: Verify UF2 output
         run: |
-          OBJCOPY="$(find "$HOME/.arduino15/packages/rp2040/tools" -type f -name arm-none-eabi-objcopy -print -quit)"
-          if [ -z "$OBJCOPY" ]; then
-            echo "::error::arm-none-eabi-objcopy not found in the installed RP2040 toolchain"
-            exit 1
-          fi
-          "$OBJCOPY" -O ihex \
-            "$GITHUB_WORKSPACE/build/DioscuriSlave/DioscuriSlave.ino.elf" \
-            "$GITHUB_WORKSPACE/build/DioscuriSlave/DioscuriSlave.ino.hex"
+          UF2="$GITHUB_WORKSPACE/build/DioscuriSlave/DioscuriSlave.ino.uf2"
+          test -s "$UF2" || { echo "::error::UF2 file missing or empty"; exit 1; }
+          ls -lh "$UF2"
+          file "$UF2"
 
-      - name: Verify firmware outputs
-        run: |
-          echo "Build output:"
-          find build/DioscuriSlave -maxdepth 2 -type f -printf '%f\n' | sort
-          for ext in uf2 bin hex; do
-            if ! find build/DioscuriSlave -type f -name "*.$ext" -print -quit | grep -q .; then
-              echo "::error::Expected .$ext firmware output was not generated"
-              exit 1
-            fi
-          done
-
-      - name: Upload UF2, BIN and HEX
+      - name: Upload UF2 firmware
         uses: actions/upload-artifact@v4
         with:
-          name: DioscuriSlave-RP2040-firmware
-          path: |
-            build/DioscuriSlave/**/*.uf2
-            build/DioscuriSlave/**/*.bin
-            build/DioscuriSlave/**/*.hex
+          name: DioscuriSlave-Pico-UF2
+          path: build/DioscuriSlave/DioscuriSlave.ino.uf2
           if-no-files-found: error
           retention-days: 30
