@@ -10,50 +10,50 @@
 // Port dari Dioscurios V1 —
 // ============================================================
 
-// FIRMWARE_ROLE_SLAVE  1
+// ------ PINS ------
 
-// ---- UART ----
-#define PIN_UART_TX          20   //  physical   26
-#define PIN_UART_RX          21   //  physical   27
+// ---- UART ---- (debug / serial)
+#define PIN_UART_TX          0     // GP0
+#define PIN_UART_RX          1     // GP1
 #define UART_BAUD            115200
 
-// ---- DISPLAY ----
-#define PIN_LCD_CS1           0   //   physical   debug dulu
-#define PIN_LCD_CS2           1   //   physical   debug dulu
-#define PIN_LCD_SCK           2   //   physical   debug dulu
-#define PIN_LCD_SDA           3   //   physical   debug dulu
-// ---- OLED I2C ----
-#define PIN_OLED_SDA          4   //   physical   6
-#define PIN_OLED_SCL          5   //   physical   7
+// ---- DISPLAY (Nokia 105 dual - SPI0) ----
+#define PIN_LCD_SCK          18    // SPI0 SCK
+#define PIN_LCD_SDA          19    // SPI0 MOSI (TX)
+#define PIN_LCD_CS1          16
+#define PIN_LCD_CS2          17
+#define PIN_LCD_RESET        20
 
-#define PIN_LCD_RESET         6   //   physical   debug dulu
+// ---- OLED I2C 0.96" ----
+#define PIN_OLED_SDA         4     // I2C0 SDA
+#define PIN_OLED_SCL         5     // I2C0 SCL
 
 // ---- Encoder dual ----
-#define ENC_A                 7   //   physical   10
-#define ENC_B                 8   //   physical   11
-#define ENC_SW                9   //   physical   12
+#define ENC_A                7     // physical 10
+#define ENC_B                8     // physical 11
+#define ENC_SW               9
 
-#define PIN_ENC2_A           10   //  physical   14
-#define PIN_ENC2_B           11   //  physical   15
+#define PIN_ENC2_A           10    // physical 14
+#define PIN_ENC2_B           11    // physical 15
 #define PIN_ENC2_SW          12
 
 // ---- Analog / sleep ----
-#define PIN_POT_FAN          28   //  physical   34
-#define MOTION_PIN           15   //  physical   20
-#define PIN_SLEEP2           16   //  physical   21
+#define PIN_POT_FAN          28    // physical 34 (ADC2)
+#define MOTION_PIN           21
+#define PIN_SLEEP2           22
 
-#define TEMP_PIN             26   //  physical   31
-#define PIN_HOTAIR_ADC       27   //  physical   32
+#define TEMP_PIN             26    // physical 31 (ADC0)
+#define PIN_HOTAIR_ADC       27    // physical 32 (ADC1)
 
 // ---- PWM / heater ----
-#define PWM_PIN              17   //  physical   22
-#define PIN_HEATER_AC        18   //  physical   24
-#define PIN_FAN_PWM          19
-#define PIN_ZERO_CROSS       22   //   physical   29
+#define PWM_PIN              13    // bisa untuk fan atau heater
+#define PIN_HEATER_AC        14
+#define PIN_FAN_PWM          15
+#define PIN_ZERO_CROSS       2
 
 // ---- Buzzer / future relay ----
-#define BUZZER_PIN           13   //   physical   17
-//#define PIN_AC_RELAY or LCD REST ( JIKA GLITCH )       ×
+#define BUZZER_PIN           3
+//#define 
 
 // ---- PID defaults ----
 #define PID_KP_T12           3.2f
